@@ -20,6 +20,7 @@ import { ComplaintAssignmentConfigModule } from './modules/complaint_system/comp
 import { AppCitizenModule } from './modules/core_tables/app-citizen/app-citizen.module';
 import { AppUserModule } from './modules/core_tables/app_user/app_user.module';
 import { AppUserRoleModule } from './modules/core_tables/app_user_role/app_user_role.module';
+import { ComplaintModule } from './modules/complaint_system/complaint/complaint.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { AppUserRoleModule } from './modules/core_tables/app_user_role/app_user_
     AppCitizenModule,
     AppUserModule,
     AppUserRoleModule,
+    ComplaintModule,
   ],
 })
 export class AppModule {}

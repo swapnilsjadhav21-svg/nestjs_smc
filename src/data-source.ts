@@ -18,5 +18,5 @@ export const AppDataSource = new DataSource({
     join(__dirname, '**', '*.entity.{ts,js}'),
     join(__dirname, '**', '*.model.{ts,js}'),
   ],
-  migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
+  migrations: [join(__dirname, 'database', 'migrations', '*.{ts,js}')],
 });
