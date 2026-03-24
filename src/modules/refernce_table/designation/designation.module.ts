@@ -6,4 +6,4 @@ import { DesignationController } from './designation.controller';
   providers: [DesignationService],
   controllers: [DesignationController]
 })
-export class DesignatioModule {}
+export class DesignationModule {}
