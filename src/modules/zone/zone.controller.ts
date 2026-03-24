@@ -1,4 +1,4 @@
 import { Controller } from '@nestjs/common';
 
-@Controller('designation')
+@Controller('zone')
 export class ZoneController {}
