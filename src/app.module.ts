@@ -3,13 +3,19 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 //import { ComplaintsModule } from './complaints/complaints.module';
 //import { SequelizeModule } from "@nestjs/sequelize"
-import { DepartmentModule } from './modules/department/department.module';
-import { DesignationModule } from './modules/designation/designation.module';
-import { RoleModule } from './modules/role/role.module';
-import { ZoneModule } from './modules/zone/zonemodule';
+import { DepartmentModule } from './modules/reference_tables/department/department.module';
+import { DesignationModule } from './modules/reference_tables/designation/designation.module';
+import { RoleModule } from './modules/reference_tables/role/role.module';
+import { ZoneModule } from './modules/reference_tables/zone/zonemodule';
+import { PrabhagModule } from './modules/reference_tables/prabhag/prabhag.module';
+import { PrabhagZoneMappingModule } from './modules/reference_tables/prabhag_zone_mapping/prabhagZoneMapping.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
+
+import { AppCitizenModule } from './modules/core_tables/app-citizen/app-citizen.module';
+import { AppUserModule } from './modules/core_tables/app_user/app_user.module';
+import { AppUserRoleModule } from './modules/core_tables/app_user_role/app_user_role.module';
 
 @Module({
   imports: [
@@ -32,6 +38,11 @@ import { join } from 'path';
     DesignationModule,
     RoleModule,
     ZoneModule,
+    PrabhagModule,
+    PrabhagZoneMappingModule,
+    AppCitizenModule,
+    AppUserModule,
+    AppUserRoleModule,
   ],
 })
-export class AppModule { }
+export class AppModule {}
