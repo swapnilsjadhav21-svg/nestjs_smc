@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitMigration1774337509067 implements MigrationInterface {
-    name = 'InitMigration1774337509067'
+export class Prabhagzonemappingupdate1774337560333 implements MigrationInterface {
+    name = 'Prabhagzonemappingupdate1774337560333'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`ALTER TABLE "ref_prabhag_zone_mapping" ADD "is_primary" boolean NOT NULL DEFAULT false`);

@@ -12,6 +12,10 @@ import { PrabhagZoneMappingModule } from './modules/reference_tables/prabhag_zon
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
+//import { Prabhag } from './modules/prabhag/entities/prabhag.entity';
+import { ComplaintTypeModule } from './modules/complaint_system/complaint_type/complaint_type.module';
+import { ComplaintAssignmentStrategyModule } from './modules/complaint_system/complaint_assignment_strategy/complaint_assignment_strategy.module';
+import { ComplaintAssignmentConfigModule } from './modules/complaint_system/complaint_assignment_config/complaint_assignment_config.module';
 
 import { AppCitizenModule } from './modules/core_tables/app-citizen/app-citizen.module';
 import { AppUserModule } from './modules/core_tables/app_user/app_user.module';
@@ -40,6 +44,9 @@ import { AppUserRoleModule } from './modules/core_tables/app_user_role/app_user_
     ZoneModule,
     PrabhagModule,
     PrabhagZoneMappingModule,
+    ComplaintTypeModule,
+    ComplaintAssignmentStrategyModule,
+    ComplaintAssignmentConfigModule,
     AppCitizenModule,
     AppUserModule,
     AppUserRoleModule,

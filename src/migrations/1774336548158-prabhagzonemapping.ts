@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitMigration1774337198608 implements MigrationInterface {
-    name = 'InitMigration1774337198608'
+export class Prabhagzonemapping1774336548158 implements MigrationInterface {
+    name = 'Prabhagzonemapping1774336548158'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TABLE "ref_prabhag_zone_mapping" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "created_by" integer, "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_by" integer, "is_deleted" boolean NOT NULL DEFAULT false, "prabhag_id" integer, "zone_id" integer, CONSTRAINT "PK_c0a8380e161b44f9a18ece0c971" PRIMARY KEY ("id"))`);
