@@ -2,8 +2,8 @@ import { Entity, ManyToOne, JoinColumn } from "typeorm";
 import { BaseTable } from "src/common/base.entity";
 import { ComplaintType } from "../../complaint_type/entities/complaint_type.entity";
 import { ComplaintAssignmentStrategy } from "../../complaint_assignment_strategy/entities/complaint_assignment_strategy.entity";
-import { Designation } from "src/modules/refernce_table/designation/entities/designation.entity";
-import { Department } from "src/modules/refernce_table/department/entities/department.entity";
+import { Designation } from "src/modules/reference_tables/designation/entities/designation.entity";
+import { Department } from "src/modules/reference_tables/department/entities/department.entity";
 
 @Entity('complaint_assignment_config')
 export class ComplaintAssignmentConfig extends BaseTable{
