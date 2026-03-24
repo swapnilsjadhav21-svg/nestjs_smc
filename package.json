@@ -13,7 +13,7 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "typeorm": "node -r ts-node/register -r tsconfig-paths/register ./node_modules/typeorm/cli.js -d src/data-source.ts",
-    "migration:generate": "npm run typeorm -- migration:generate",
+    "migration:generate": "npm run typeorm -- migration:generate src/migrations/AutoMigration_$(node -e \"console.log(Date.now())\")",
     "migration:create": "npm run typeorm -- migration:create",
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
