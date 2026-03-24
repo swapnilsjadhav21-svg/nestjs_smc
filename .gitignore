@@ -13,7 +13,7 @@ yarn-error.log*
 lerna-debug.log*
 
 # migration folder
-src/migration/
+src/database/migrations
 
 
 # OS
