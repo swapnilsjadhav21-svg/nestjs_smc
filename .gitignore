@@ -32,6 +32,9 @@ src/database/migrations
 .settings/
 *.sublime-workspace
 
+#Migrations
+src/migrations
+
 # IDE - VSCode
 .vscode/*
 !.vscode/settings.json
