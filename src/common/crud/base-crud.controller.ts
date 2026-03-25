@@ -1,9 +1,9 @@
-import { Body, Get, Post } from '@nestjs/common';
+import { Body, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { DeepPartial } from 'typeorm';
 import { BaseCrudService } from './base-crud.service';
 
 export abstract class BaseCrudController<
-  T extends object,
+  T extends { id: number },
   CreateDto extends DeepPartial<T>,
 > {
   constructor(protected readonly service: BaseCrudService<T, CreateDto>) {}
@@ -16,5 +16,10 @@ export abstract class BaseCrudController<
   @Get()
   findAll(): Promise<T[]> {
     return this.service.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<T> {
+    return this.service.findOne(id);
   }
 }
