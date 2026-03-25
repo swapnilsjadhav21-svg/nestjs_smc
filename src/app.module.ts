@@ -32,9 +32,9 @@ import { ComplaintMediaModule } from './modules/complaint_system/complaint_media
       type: 'postgres',
       host: process.env.DB_HOST,
       port: Number(process.env.DB_PORT),
-      username: process.env.DB_USER,
+      username: process.env.DB_USERNAME ?? process.env.DB_USER,
       password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
+      database: process.env.DB_DATABASE ?? process.env.DB_NAME,
 
       //autoLoadEntities: true, // 🔥 IMPORTANT
       entities: [join(__dirname, '**', '*.entity.{ts,js}')],
