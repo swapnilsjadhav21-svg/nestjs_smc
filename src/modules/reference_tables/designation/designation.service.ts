@@ -6,7 +6,7 @@ import { CreateDesignationDto } from './dto/create-designation.dto';
 import { Designation } from './entities/designation.entity';
 
 @Injectable()
-export class DesignationService extends BaseCrudService<Designation> {
+export class DesignationService extends BaseCrudService<Designation, CreateDesignationDto> {
 	constructor(
 		@InjectRepository(Designation)
 		private readonly designationRepo: Repository<Designation>,

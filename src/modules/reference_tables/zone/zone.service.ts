@@ -5,7 +5,7 @@ import { Zone } from './entities/zone.entity';
 import { CreateZoneDto } from './dto/create-zone.dto';
 import { BaseCrudService } from 'src/common/crud/base-crud.service';
 @Injectable()
-export class ZoneService extends BaseCrudService<Zone> {
+export class ZoneService extends BaseCrudService<Zone, CreateZoneDto> {
 
   constructor(
     @InjectRepository(Zone)

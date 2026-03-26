@@ -7,7 +7,7 @@ import { DepartmentService } from './department.service';
 
 @ApiTags('Reference - Department')
 @Controller('reference/department')
-export class DepartmentController extends BaseCrudController<Department> {
+export class DepartmentController extends BaseCrudController<Department, CreateDepartmentDto> {
 	constructor(private readonly departmentService: DepartmentService) {
 		super(departmentService);
 	}

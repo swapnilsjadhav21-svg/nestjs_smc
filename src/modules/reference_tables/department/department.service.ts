@@ -6,7 +6,7 @@ import { CreateDepartmentDto } from './dto/create-department.dto';
 import { Department } from './entities/department.entity';
 
 @Injectable()
-export class DepartmentService extends BaseCrudService<Department> {
+export class DepartmentService extends BaseCrudService<Department, CreateDepartmentDto> {
 	constructor(
 		@InjectRepository(Department)
 		private readonly departmentRepo: Repository<Department>,

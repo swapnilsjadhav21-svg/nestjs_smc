@@ -6,7 +6,7 @@ import { CreatePrabhagDto } from './dto/create-prabhag.dto';
 import { Prabhag } from './entities/prabhag.entity';
 
 @Injectable()
-export class PrabhagService extends BaseCrudService<Prabhag> {
+export class PrabhagService extends BaseCrudService<Prabhag, CreatePrabhagDto> {
 	constructor(
 		@InjectRepository(Prabhag)
 		private readonly prabhagRepo: Repository<Prabhag>,

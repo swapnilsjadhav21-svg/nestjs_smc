@@ -7,7 +7,7 @@ import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 
 @ApiTags('Reference - Zone')
 @Controller('reference/zone')
-export class ZoneController extends BaseCrudController<Zone> {
+export class ZoneController extends BaseCrudController<Zone, CreateZoneDto> {
   constructor(private readonly zoneService: ZoneService) {
     super(zoneService);
   }

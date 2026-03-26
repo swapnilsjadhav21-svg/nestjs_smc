@@ -6,7 +6,7 @@ import { CreateComplainttypetDto } from './dto/create-complaint_type.dto';
 import { ComplaintType } from './entities/complaint_type.entity';
 
 @Injectable()
-export class ComplaintTypeService extends BaseCrudService<ComplaintType> {
+export class ComplaintTypeService extends BaseCrudService<ComplaintType, CreateComplainttypetDto> {
     constructor(
         @InjectRepository(ComplaintType)
         private readonly complainttypeRepo : Repository<ComplaintType>,
