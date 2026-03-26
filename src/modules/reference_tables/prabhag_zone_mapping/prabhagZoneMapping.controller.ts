@@ -7,10 +7,7 @@ import { PrabhagZoneMappingService } from './prabhagZoneMapping.service';
 
 @ApiTags('Reference - Prabhag Zone Mapping')
 @Controller('reference/prabhag-zone-mapping')
-export class PrabhagZoneMappingController extends BaseCrudController<
-  PrabhagZoneMapping,
-  CreatePrabhagZoneMappingDto
-> {
+export class PrabhagZoneMappingController extends BaseCrudController<PrabhagZoneMapping> {
   constructor(
     private readonly prabhagZoneMappingService: PrabhagZoneMappingService,
   ) {

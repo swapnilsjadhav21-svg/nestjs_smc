@@ -1,13 +1,10 @@
 import { NotFoundException } from '@nestjs/common';
 import { DeepPartial, FindOptionsWhere, Repository } from 'typeorm';
 
-export abstract class BaseCrudService<
-  T extends { id: number },
-  CreateDto extends DeepPartial<T>,
-> {
+export abstract class BaseCrudService<T extends { id: number }> {
   constructor(protected readonly repository: Repository<T>) {}
 
-  async create(dto: CreateDto): Promise<T> {
+  async create(dto: DeepPartial<T>): Promise<T> {
     const entity = this.repository.create(dto);
     return this.repository.save(entity);
   }
@@ -17,7 +14,7 @@ export abstract class BaseCrudService<
   }
 
   async findOne(id: number): Promise<T> {
-    const record = await this.repository.findOneBy({ id } as FindOptionsWhere<T>);
+    const record = await this.repository.findOneBy({ id } as any);
 
     if (!record) {
       throw new NotFoundException(`Record with id ${id} not found`);

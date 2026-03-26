@@ -6,7 +6,7 @@ import { CreateRoleDto } from './dto/create-role.dto';
 import { Role } from './entities/role.entity';
 
 @Injectable()
-export class RoleService extends BaseCrudService<Role, CreateRoleDto> {
+export class RoleService extends BaseCrudService<Role> {
 	constructor(
 		@InjectRepository(Role)
 		private readonly roleRepo: Repository<Role>,

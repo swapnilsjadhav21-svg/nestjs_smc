@@ -7,7 +7,7 @@ import { PrabhagService } from './prabhag.service';
 
 @ApiTags('Reference - Prabhag')
 @Controller('reference/prabhag')
-export class PrabhagController extends BaseCrudController<Prabhag, CreatePrabhagDto> {
+export class PrabhagController extends BaseCrudController<Prabhag> {
 	constructor(private readonly prabhagService: PrabhagService) {
 		super(prabhagService);
 	}

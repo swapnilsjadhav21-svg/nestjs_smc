@@ -6,10 +6,7 @@ import { PrabhagZoneMapping } from './entities/prabhagZoneMapping.entity';
 import { CreatePrabhagZoneMappingDto } from './dto/create-prabhag-zone-mapping.dto';
 
 @Injectable()
-export class PrabhagZoneMappingService extends BaseCrudService<
-  PrabhagZoneMapping,
-  CreatePrabhagZoneMappingDto
-> {
+export class PrabhagZoneMappingService extends BaseCrudService<PrabhagZoneMapping> {
   constructor(
     @InjectRepository(PrabhagZoneMapping)
     private readonly prabhagZoneMappingRepo: Repository<PrabhagZoneMapping>,

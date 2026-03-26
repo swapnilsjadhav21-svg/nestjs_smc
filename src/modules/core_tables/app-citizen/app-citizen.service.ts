@@ -7,7 +7,7 @@ import { CreateAppCitizenDto } from './dto/app_citizen.dto';
 
 
 @Injectable()
-export class AppCitizenService extends BaseCrudService<AppCitizen, CreateAppCitizenDto> {
+export class AppCitizenService extends BaseCrudService<AppCitizen> {
     constructor(
         @InjectRepository(AppCitizen)
         private readonly appCitizenRepo: Repository<AppCitizen>,

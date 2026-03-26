@@ -8,7 +8,7 @@ import { CreateComplainttypetDto } from './dto/create-complaint_type.dto';
 
 @ApiTags('Complaint-Type')
 @Controller('complaint-type')
-export class ComplaintTypeController extends BaseCrudController<ComplaintType, CreateComplainttypetDto> {
+export class ComplaintTypeController extends BaseCrudController<ComplaintType> {
 
     constructor(private readonly complainttypeService: ComplaintTypeService) {
         super(complainttypeService);

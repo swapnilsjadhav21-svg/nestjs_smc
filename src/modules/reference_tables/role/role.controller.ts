@@ -7,7 +7,7 @@ import { RoleService } from './role.service';
 
 @ApiTags('Reference - Role')
 @Controller('reference/role')
-export class RoleController extends BaseCrudController<Role, CreateRoleDto> {
+export class RoleController extends BaseCrudController<Role> {
 	constructor(private readonly roleService: RoleService) {
 		super(roleService);
 	}

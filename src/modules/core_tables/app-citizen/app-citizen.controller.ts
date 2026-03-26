@@ -8,7 +8,7 @@ import { AppCitizenService } from './app-citizen.service';
 
 @ApiTags('AppCitizen')
 @Controller('core/AppCitizen')
-export class AppCitizenController extends BaseCrudController<AppCitizen, CreateAppCitizenDto> {
+export class AppCitizenController extends BaseCrudController<AppCitizen> {
 	constructor(private readonly appCitizenService: AppCitizenService) {
 		super(appCitizenService);
 	}

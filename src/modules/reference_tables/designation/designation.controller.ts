@@ -7,7 +7,7 @@ import { DesignationService } from './designation.service';
 
 @ApiTags('Reference - Designation')
 @Controller('reference/designation')
-export class DesignationController extends BaseCrudController<Designation, CreateDesignationDto> {
+export class DesignationController extends BaseCrudController<Designation> {
 	constructor(private readonly designationService: DesignationService) {
 		super(designationService);
 	}

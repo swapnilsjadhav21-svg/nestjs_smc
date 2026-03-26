@@ -2,14 +2,11 @@ import { Body, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { DeepPartial } from 'typeorm';
 import { BaseCrudService } from './base-crud.service';
 
-export abstract class BaseCrudController<
-  T extends { id: number },
-  CreateDto extends DeepPartial<T>,
-> {
-  constructor(protected readonly service: BaseCrudService<T, CreateDto>) {}
+export abstract class BaseCrudController<T extends { id: number }> {
+  constructor(protected readonly service: BaseCrudService<T>) {}
 
   @Post()
-  create(@Body() dto: CreateDto): Promise<T> {
+  create(@Body() dto: any): Promise<T> {
     return this.service.create(dto);
   }
 
