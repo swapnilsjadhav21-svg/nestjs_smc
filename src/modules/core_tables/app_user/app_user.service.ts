@@ -16,6 +16,8 @@ export class AppUserService extends BaseCrudService<AppUser, CreateAppUserDto> {
     super(repository);
   }
 
+
+  
   override async create(dto: CreateAppUserDto): Promise<AppUser> {
     const existing = await this.repository.findOne({
       where: { mobile_no: dto.mobile_no, is_deleted: false },
