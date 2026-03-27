@@ -4,6 +4,7 @@ import { ComplaintAssignmentStrategy } from './entities/complaint_assignment_str
 import { ComplaintAssignmentStrategyService } from './complaint_assignment_strategy.service';
 import { ComplaintAssignmentStrategyController } from './complaint_assignment_strategy.controller';
 
+
 @Module({
   imports: [TypeOrmModule.forFeature([ComplaintAssignmentStrategy])],
   controllers: [ComplaintAssignmentStrategyController],
