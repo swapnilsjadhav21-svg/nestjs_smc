@@ -9,7 +9,7 @@ import { ComplaintType } from './entities/complaint_type.entity';
 export class ComplaintTypeService extends BaseCrudService<ComplaintType, CreateComplainttypetDto> {
     constructor(
         @InjectRepository(ComplaintType)
-        private readonly complainttypeRepo : Repository<ComplaintType>,
+        complainttypeRepo : Repository<ComplaintType>,
     ){
         super(complainttypeRepo);
     }

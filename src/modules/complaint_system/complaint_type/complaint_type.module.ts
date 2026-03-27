@@ -7,6 +7,7 @@ import { ComplaintType } from './entities/complaint_type.entity';
 @Module({
   imports :[TypeOrmModule.forFeature([ComplaintType])],
   providers: [ComplaintTypeService],
-  controllers: [ComplaintTypeController]
+  controllers: [ComplaintTypeController],
+  exports:[ComplaintTypeService]
 })
 export class ComplaintTypeModule {}

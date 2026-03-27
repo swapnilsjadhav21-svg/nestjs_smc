@@ -1,7 +1,6 @@
 import { Body, Controller, Post } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
-import { CreateComplaintDto } from '../complaint/dto/create-complaint.dto';
 import { ComplaintType } from './entities/complaint_type.entity';
 import { ComplaintTypeService } from './complaint_type.service';
 import { CreateComplainttypetDto } from './dto/create-complaint_type.dto';
