@@ -8,5 +8,6 @@ import { PrabhagZoneMapping } from './entities/prabhagZoneMapping.entity';
   imports: [TypeOrmModule.forFeature([PrabhagZoneMapping])],
   providers: [PrabhagZoneMappingService],
   controllers: [PrabhagZoneMappingController],
+  exports: [PrabhagZoneMappingService],
 })
 export class PrabhagZoneMappingModule {}
