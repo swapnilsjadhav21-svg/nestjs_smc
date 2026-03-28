@@ -1,0 +1,9 @@
+export enum ComplaintStatus {
+  NEW = 'NEW',
+  ASSIGNED = 'ASSIGNED',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  REOPENED = 'REOPENED',
+  REJECTED = 'REJECTED',
+  ESCALATED = 'ESCALATED',
+}

@@ -1,14 +1,15 @@
+// dto/update-complaint-status.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ComplaintStatus } from '../enums/complaint-status.enum';
 
 export class UpdateComplaintStatusDto {
-  @ApiProperty({ example: 'IN_PROGRESS' })
-  @IsString()
-  @IsNotEmpty()
-  newStatus: string;
+  @ApiProperty({ enum: ComplaintStatus })
+  @IsEnum(ComplaintStatus)
+  status: ComplaintStatus;
 
-  @ApiProperty({ example: 'Officer started working on this', required: false })
+  @ApiProperty({ example: 'Issue has been resolved', required: false })
   @IsOptional()
   @IsString()
-  remark?: string;
+  remark?: string;             // officer can add a remark when updating status
 }

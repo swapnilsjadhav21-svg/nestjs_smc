@@ -14,11 +14,11 @@ export class ComplaintAssignmentStrategyController extends BaseCrudController<Co
     super(complaintAssignmentStrategyService);
   }
 
-  // @Post()
-  // @ApiOperation({ summary: 'Create Assignment Strategy' })
-  // override create(@Body() dto: CreateComplaintAssignmentStrategyDto): Promise<ComplaintAssignmentStrategy> {
-  //   return super.create(dto);
-  // }
+  @Post()
+  @ApiOperation({ summary: 'Create Assignment Strategy' })
+  override create(@Body() dto: CreateComplaintAssignmentStrategyDto): Promise<ComplaintAssignmentStrategy> {
+    return super.create(dto);
+  }
 
   @Get()
   @ApiOperation({ summary: 'Get all Assignment Strategies' })
