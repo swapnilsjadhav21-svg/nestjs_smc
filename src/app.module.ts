@@ -23,6 +23,7 @@ import { AppUserRoleModule } from './modules/core_tables/app_user_role/app_user_
 import { ComplaintModule } from './modules/complaint_system/complaint/complaint.module';
 import { ComplaintHistoryModule } from './modules/complaint_system/complaint_history/complaint_history.module';
 import { ComplaintMediaModule } from './modules/complaint_system/complaint_media/complaint_media.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ComplaintMediaModule } from './modules/complaint_system/complaint_media
     ComplaintModule,
     ComplaintHistoryModule,
     ComplaintMediaModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
