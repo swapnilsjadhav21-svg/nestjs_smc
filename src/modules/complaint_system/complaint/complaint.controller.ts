@@ -1,12 +1,15 @@
 // complaint.controller.ts
 import { Body, Controller, Get, Param,
-         ParseIntPipe, Post } from '@nestjs/common';
+         ParseIntPipe, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ComplaintService } from './complaint.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
 import { UpdateComplaintStatusDto } from './dto/update-complaint-status.dto';
 import { ReassignComplaintDto } from './dto/reassign-complaint.dto';
 import { Complaint } from './entities/complaint.entity';
+import { CitizenGuard } from 'src/auth/guards/citizen.guard';
+import { CurrentUser } from 'src/auth/decorators/user.decorator';
+import type { JwtPayload } from 'src/auth/strategies/jwt.strategy';
 
 @ApiTags('Complaint')
 @Controller('complaint')
@@ -26,11 +29,13 @@ export class ComplaintController {
   }
 
   @Get('my')
-  @ApiOperation({ summary: 'Citizen views their own complaints' })
-  findMyCitizenComplaints(): Promise<Complaint[]> {
-    const citizenId = 1; // will come from JWT later
-    return this.complaintService.findMyCitizenComplaints(citizenId);
-  }
+@UseGuards(CitizenGuard)
+@ApiOperation({ summary: 'Citizen views their own complaints' })
+findMyCitizenComplaints(
+  @CurrentUser() user: JwtPayload,
+): Promise<Complaint[]> {
+  return this.complaintService.findMyCitizenComplaints(user.sub);
+}
 
   @Get('assigned')
   @ApiOperation({ summary: 'Officer views complaints assigned to them' })

@@ -1,17 +1,18 @@
 // guards/officer.guard.ts
-import { Injectable, CanActivate, ExecutionContext,
-         ForbiddenException } from '@nestjs/common';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { JwtPayload } from '../strategies/jwt.strategy';
 
 @Injectable()
-export class OfficerGuard extends JwtAuthGuard implements CanActivate {
+export class OfficerGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
 
-    // First run base JWT validation
-    await super.canActivate(context);
+    const isAuthenticated = await (super.canActivate(context) as Promise<boolean>);
 
-    // Then check type is OFFICER
+    if (!isAuthenticated) {
+      return false;
+    }
+
     const request = context.switchToHttp().getRequest();
     const user: JwtPayload = request.user;
 

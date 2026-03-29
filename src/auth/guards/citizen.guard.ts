@@ -1,17 +1,21 @@
 // guards/citizen.guard.ts
-import { Injectable, CanActivate, ExecutionContext, 
-         ForbiddenException } from '@nestjs/common';
-import { JwtAuthGuard } from './jwt-auth.guard';
+import { ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { JwtPayload } from '../strategies/jwt.strategy';
 
 @Injectable()
-export class CitizenGuard extends JwtAuthGuard implements CanActivate {
+export class CitizenGuard extends AuthGuard('jwt') {
   async canActivate(context: ExecutionContext): Promise<boolean> {
 
-    // First run base JWT validation
-    await super.canActivate(context);
+    // Cast is required — super.canActivate returns boolean | Promise<boolean>
+    // We must await it properly for Passport to populate request.user
+    const isAuthenticated = await (super.canActivate(context) as Promise<boolean>);
 
-    // Then check type is CITIZEN
+    if (!isAuthenticated) {
+      return false;
+    }
+
+    // Now request.user is safely populated by Passport
     const request = context.switchToHttp().getRequest();
     const user: JwtPayload = request.user;
 
