@@ -7,20 +7,23 @@ import { AuthService } from './auth.service';
 import { AppCitizen } from 'src/modules/core_tables/app-citizen/entities/appCitizen.entity';
 import { AppUser } from 'src/modules/core_tables/app_user/entities/appUser.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { AppOtp } from './app-otp/entities/app-otp.entity';
+import { AppUserRole } from 'src/modules/core_tables/app_user_role/entities/appUserRole.entity';
 
 @Module({
   imports: [
     ConfigModule,
-    TypeOrmModule.forFeature([AppCitizen, AppUser]),
+    TypeOrmModule.forFeature([AppCitizen, AppUser,AppOtp,AppUserRole]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET') ?? 'dev-jwt-secret',
-        signOptions: { expiresIn: '7d' },
+        signOptions: { expiresIn: '24h' },
       }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports:[JwtStrategy,JwtModule]
 })
 export class AuthModule {}

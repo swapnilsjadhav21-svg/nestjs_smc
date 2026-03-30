@@ -1,6 +1,7 @@
 // dto/verify-otp.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, Length } from 'class-validator';
+import { IsString, IsNotEmpty, Length, IsEnum } from 'class-validator';
+import { UserType } from './send-otp.dto';
 
 export class VerifyOtpDto {
   @ApiProperty({ example: '9876543210' })
@@ -9,9 +10,13 @@ export class VerifyOtpDto {
   @Length(10, 10, { message: 'Mobile number must be exactly 10 digits' })
   mobile_number: string;
 
-  @ApiProperty({ example: '1234' })
+  @ApiProperty({ example: '123456' })
   @IsString()
   @IsNotEmpty()
-  @Length(4, 4, { message: 'OTP must be exactly 4 digits' })
-  otp: string;       // any 4 digit value accepted for now
+  @Length(6, 6, { message: 'OTP must be exactly 6 digits' })
+  otp: string;
+
+  @ApiProperty({ enum: UserType, example: UserType.CITIZEN })
+  @IsEnum(UserType)
+  user_type: UserType;
 }

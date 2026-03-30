@@ -6,6 +6,6 @@ export class AppCitizen extends BaseTable {
     @Column({ type: 'varchar'})
     mobile_no:string;
     
-    @Column({ type: 'varchar', unique:true})
+    @Column({ type: 'varchar', unique:true, nullable: true})
     name:string;
 }
