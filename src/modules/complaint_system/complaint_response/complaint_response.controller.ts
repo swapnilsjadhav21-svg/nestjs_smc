@@ -6,7 +6,7 @@ import { CreateComplaintResponseDto } from './dto/create-complaint-response.dto'
 import { ComplaintResponseService } from './complaint_response.service';
 
 @ApiTags('Complaint - Response')
-@Controller('complaint')
+@Controller('complaint-response')
 export class ComplaintResponseController extends BaseCrudController<ComplaintResponse, CreateComplaintResponseDto> {
   constructor(private readonly complaintResponseService: ComplaintResponseService) {
     super(complaintResponseService);
@@ -29,5 +29,11 @@ export class ComplaintResponseController extends BaseCrudController<ComplaintRes
     @Param('id', ParseIntPipe) complaintId: number,
   ): Promise<ComplaintResponse[]> {
     return this.complaintResponseService.findByComplaintId(complaintId);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all complaint responses' })
+  override findAll(): Promise<ComplaintResponse[]> {
+    return this.complaintResponseService.findAllWithRelations();
   }
 }
