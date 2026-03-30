@@ -21,9 +21,11 @@ import { AppCitizenModule } from './modules/core_tables/app-citizen/app-citizen.
 import { AppUserModule } from './modules/core_tables/app_user/app_user.module';
 import { AppUserRoleModule } from './modules/core_tables/app_user_role/app_user_role.module';
 import { ComplaintModule } from './modules/complaint_system/complaint/complaint.module';
-import { ComplaintHistoryModule } from './modules/complaint_system/complaint_history/complaint_history.module';
+import { GenMediaModule } from './modules/complaint_system/gen_media/gen_media.module';
 import { ComplaintMediaModule } from './modules/complaint_system/complaint_media/complaint_media.module';
 import { AuthModule } from './auth/auth.module';
+import { ComplaintResponseModule } from './modules/complaint_system/complaint_response/complaint_response.module';
+import { ComplaintResponseMediaModule } from './modules/complaint_system/complaint_response_media/complaint_response_media.module';
 
 @Module({
   imports: [
@@ -55,9 +57,11 @@ import { AuthModule } from './auth/auth.module';
     AppUserModule,
     AppUserRoleModule,
     ComplaintModule,
-    ComplaintHistoryModule,
+    GenMediaModule,
     ComplaintMediaModule,
     AuthModule,
+    ComplaintResponseModule,
+    ComplaintResponseMediaModule,
   ],
 })
 export class AppModule {}

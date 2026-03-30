@@ -1,9 +1,9 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
-import { ComplaintMedia } from './entities/complaint_media.entity';
-import { CreateComplaintMediaDto } from './dto/create-complaint-media.dto';
-import { ComplaintMediaService } from './complaint_media.service';
+import { ComplaintMedia } from '../complaint_media/entities/complaint_media.entity';
+import { CreateComplaintMediaDto } from '../complaint_media/dto/create-complaint-media.dto';
+import { ComplaintMediaService } from './gen_media.service';
 
 @ApiTags('Complaint - Media')
 @Controller('complaint-media')
