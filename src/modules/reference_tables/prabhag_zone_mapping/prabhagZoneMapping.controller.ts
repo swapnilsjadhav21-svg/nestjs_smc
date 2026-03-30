@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { PrabhagZoneMapping } from './entities/prabhagZoneMapping.entity';
 import { CreatePrabhagZoneMappingDto } from './dto/create-prabhag-zone-mapping.dto';
@@ -18,6 +19,8 @@ export class PrabhagZoneMappingController extends BaseCrudController<
   }
 
   @Post()
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Prabhag Zone Mapping' })
   override create(@Body() dto: CreatePrabhagZoneMappingDto): Promise<PrabhagZoneMapping> {
     return super.create(dto);  // will call our overridden service create()

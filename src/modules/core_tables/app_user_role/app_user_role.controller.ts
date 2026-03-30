@@ -1,13 +1,15 @@
 // app-user-role.controller.ts
-import { Body, Controller, Delete, Get, 
-         Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { AppUserRole } from './entities/appUserRole.entity';
 import { CreateAppUserRoleDto } from './dto/create-app-user-role.dto';
 import { AppUserRoleService } from './app_user_role.service';
 
 @ApiTags('Core - App User Role')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(AdminGuard)
 @Controller('user-role')
 export class AppUserRoleController extends BaseCrudController<AppUserRole, CreateAppUserRoleDto> {
   constructor(private readonly appUserRoleService: AppUserRoleService) {

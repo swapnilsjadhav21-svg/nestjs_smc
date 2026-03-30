@@ -9,9 +9,19 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe);
 
   const config = new DocumentBuilder()
-    .setTitle('Complaint Management API')
-    .setDescription('API documentation for complaint system')
+    .setTitle('SMC Complaints API')
+    .setDescription('Solapur Municipal Corporation Complaints System')
     .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'JWT-auth',
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { Department } from './entities/department.entity';
@@ -13,6 +14,8 @@ export class DepartmentController extends BaseCrudController<Department, CreateD
 	}
 
 	@Post()
+	@UseGuards(AdminGuard)
+	@ApiBearerAuth('JWT-auth')
 	@ApiOperation({ summary: 'Create Department' })
 	override create(@Body() dto: CreateDepartmentDto): Promise<Department> {
 		return super.create(dto);

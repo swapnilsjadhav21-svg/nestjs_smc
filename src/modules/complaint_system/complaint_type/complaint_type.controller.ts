@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { ComplaintType } from './entities/complaint_type.entity';
 import { ComplaintTypeService } from './complaint_type.service';
@@ -14,6 +15,8 @@ export class ComplaintTypeController extends BaseCrudController<ComplaintType, C
     }
 
     @Post()
+    @UseGuards(AdminGuard)
+    @ApiBearerAuth('JWT-auth')
     @ApiOperation({ summary: 'Create Complaint-Type' })
     override create(@Body() dto: CreateComplainttypetDto): Promise<ComplaintType> {
         return super.create(dto);

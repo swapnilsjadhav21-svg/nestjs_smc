@@ -1,13 +1,17 @@
 // app-user.controller.ts
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { AppUser } from './entities/appUser.entity';
 import { CreateAppUserDto } from './dto/create-app-user.dto';
 import { UpdateAppUserDto, UpdateUserStatusDto } from './dto/update-app-user.dto';
 import { AppUserService } from './app_user.service';
+import { UseGuards } from '@nestjs/common';
 
 @ApiTags('Core - App User')
+@ApiBearerAuth('JWT-auth')
+@UseGuards(AdminGuard)
 @Controller('user')
 export class AppUserController extends BaseCrudController<AppUser, CreateAppUserDto> {
   constructor(private readonly appUserService: AppUserService) {

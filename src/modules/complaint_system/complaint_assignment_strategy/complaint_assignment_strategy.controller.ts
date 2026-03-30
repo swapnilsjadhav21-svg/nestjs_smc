@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { ComplaintAssignmentStrategy } from './entities/complaint_assignment_strategy.entity';
 import { CreateComplaintAssignmentStrategyDto } from './dto/complaint-assignment-strategy.dto';
@@ -15,6 +16,8 @@ export class ComplaintAssignmentStrategyController extends BaseCrudController<Co
   }
 
   @Post()
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Assignment Strategy' })
   override create(@Body() dto: CreateComplaintAssignmentStrategyDto): Promise<ComplaintAssignmentStrategy> {
     return super.create(dto);

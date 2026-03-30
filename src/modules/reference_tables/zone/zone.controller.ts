@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { ZoneService } from './zone.service';
 import { CreateZoneDto } from './dto/create-zone.dto';
 import { Zone } from './entities/zone.entity';
@@ -13,6 +14,8 @@ export class ZoneController extends BaseCrudController<Zone, CreateZoneDto> {
   }
 
   @Post()
+  @UseGuards(AdminGuard)
+  @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Create Zone' })
   override create(@Body() dto: CreateZoneDto): Promise<Zone> {
     return super.create(dto);

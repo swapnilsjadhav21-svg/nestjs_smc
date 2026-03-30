@@ -1,5 +1,6 @@
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { Role } from './entities/role.entity';
@@ -13,6 +14,8 @@ export class RoleController extends BaseCrudController<Role, CreateRoleDto> {
 	}
 
 	@Post()
+	@UseGuards(AdminGuard)
+	@ApiBearerAuth('JWT-auth')
 	@ApiOperation({ summary: 'Create Role' })
 	override create(@Body() dto: CreateRoleDto): Promise<Role> {
 		return super.create(dto);
