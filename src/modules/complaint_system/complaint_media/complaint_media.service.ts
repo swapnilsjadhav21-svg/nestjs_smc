@@ -16,10 +16,14 @@ export class ComplaintMediaService extends BaseCrudService<ComplaintMedia, Creat
 
   async findByComplaintId(complaintId: number): Promise<ComplaintMedia[]> {
     return this.repository.find({
-      where: {
-        complaint: { id: complaintId },
-        is_deleted: false,
-      },
+      where: { complaint: { id: complaintId }, is_deleted: false },
+      relations: ['complaint', 'media'],
+    });
+  }
+
+  async findAllWithRelations(): Promise<ComplaintMedia[]> {
+    return this.repository.find({
+      where: { is_deleted: false },
       relations: ['complaint', 'media'],
     });
   }

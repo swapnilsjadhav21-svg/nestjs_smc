@@ -1,12 +1,12 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { ComplaintMedia } from './entities/complaint_media.entity';
 import { CreateComplaintMediaDto } from './dto/create-complaint-media.dto';
 import { ComplaintMediaService } from './complaint_media.service';
 
 @ApiTags('Complaint - Media')
-@Controller('complaint')
+@Controller('complaint-media')
 export class ComplaintMediaController extends BaseCrudController<ComplaintMedia, CreateComplaintMediaDto> {
   constructor(private readonly complaintMediaService: ComplaintMediaService) {
     super(complaintMediaService);
@@ -14,6 +14,7 @@ export class ComplaintMediaController extends BaseCrudController<ComplaintMedia,
 
   @Post(':id/media')
   @ApiOperation({ summary: 'Attach media to a complaint' })
+  @ApiBody({ type: CreateComplaintMediaDto })
   attachMedia(
     @Param('id', ParseIntPipe) complaintId: number,
     @Body() dto: CreateComplaintMediaDto,
@@ -28,5 +29,11 @@ export class ComplaintMediaController extends BaseCrudController<ComplaintMedia,
     @Param('id', ParseIntPipe) complaintId: number,
   ): Promise<ComplaintMedia[]> {
     return this.complaintMediaService.findByComplaintId(complaintId);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all complaint media' })
+  override findAll(): Promise<ComplaintMedia[]> {
+    return this.complaintMediaService.findAllWithRelations();
   }
 }

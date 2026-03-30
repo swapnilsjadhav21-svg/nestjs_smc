@@ -1,20 +1,39 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { GenMediaController } from './gen_media.controller';
-import { GenMediaService } from './gen_media.service';
+import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { BaseCrudController } from 'src/common/crud/base-crud.controller';
+import { ComplaintMedia } from '../complaint_media/entities/complaint_media.entity';
+import { CreateComplaintMediaDto } from '../complaint_media/dto/create-complaint-media.dto';
+import { ComplaintMediaService } from './gen_media.service';
 
-describe('GenMediaController', () => {
-  let controller: GenMediaController;
+@ApiTags('Complaint - Media')
+@Controller('complaint-media')
+export class ComplaintMediaController extends BaseCrudController<ComplaintMedia, CreateComplaintMediaDto> {
+  constructor(private readonly complaintMediaService: ComplaintMediaService) {
+    super(complaintMediaService);
+  }
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [GenMediaController],
-      providers: [GenMediaService],
-    }).compile();
+  @Post(':id/media')
+  @ApiOperation({ summary: 'Attach media to a complaint' })
+  @ApiBody({ type: CreateComplaintMediaDto })
+  attachMedia(
+    @Param('id', ParseIntPipe) complaintId: number,
+    @Body() dto: CreateComplaintMediaDto,
+  ): Promise<ComplaintMedia> {
+    dto.complaint = { id: complaintId };
+    return this.complaintMediaService.create(dto);
+  }
 
-    controller = module.get<GenMediaController>(GenMediaController);
-  });
+  @Get(':id/media')
+  @ApiOperation({ summary: 'Get all media for a complaint' })
+  findByComplaintId(
+    @Param('id', ParseIntPipe) complaintId: number,
+  ): Promise<ComplaintMedia[]> {
+    return this.complaintMediaService.findByComplaintId(complaintId);
+  }
 
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+  @Get()
+  @ApiOperation({ summary: 'Get all complaint media' })
+  override findAll(): Promise<ComplaintMedia[]> {
+    return this.complaintMediaService.findAllWithRelations();
+  }
+}

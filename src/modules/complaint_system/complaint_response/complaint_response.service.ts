@@ -16,12 +16,16 @@ export class ComplaintResponseService extends BaseCrudService<ComplaintResponse,
 
   async findByComplaintId(complaintId: number): Promise<ComplaintResponse[]> {
     return this.repository.find({
-      where: {
-        complaint: { id: complaintId },
-        is_deleted: false,
-      },
+      where: { complaint: { id: complaintId }, is_deleted: false },
       relations: ['complaint', 'user', 'citizen'],
       order: { created_at: 'ASC' },
+    });
+  }
+
+  async findAllWithRelations(): Promise<ComplaintResponse[]> {
+    return this.repository.find({
+      where: { is_deleted: false },
+      relations: ['complaint', 'user', 'citizen'],
     });
   }
 }
