@@ -13,6 +13,10 @@ import { Zone } from '../../reference_tables/zone/entities/zone.entity';
 import { Department } from '../../reference_tables/department/entities/department.entity';
 import { ComplaintType } from '../complaint_type/entities/complaint_type.entity';
 import { Prabhag } from '../../reference_tables/prabhag/entities/prabhag.entity';
+import { GenMediaService } from '../gen_media/gen_media.service';
+import { ComplaintMediaService } from '../complaint_media/complaint_media.service';
+import { GenMedia } from '../gen_media/entities/gen_media.entity';
+import { ComplaintMedia } from '../complaint_media/entities/complaint_media.entity';
 
 const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
   [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED],
@@ -32,11 +36,17 @@ export class ComplaintService {
     @InjectRepository(AppUser)
     private readonly appUserRepo: Repository<AppUser>,
 
+    private readonly genMediaService: GenMediaService,
+    private readonly complaintMediaService: ComplaintMediaService,
     private readonly assignmentEngine: AssignmentEngineService,
     private readonly dataSource: DataSource,
   ) {}
 
-  async create(dto: CreateComplaintDto, citizenId: number): Promise<Complaint> {
+  async create(
+    dto: CreateComplaintDto,
+    citizenId: number,
+    files?: Express.Multer.File[],
+  ): Promise<Complaint> {
     const complaintType = await this.complaintRepo.manager.findOne(ComplaintType, {
       where: { id: dto.complaint_type.id, is_deleted: false },
     });
@@ -91,7 +101,29 @@ export class ComplaintService {
         saved.department = department;
       }
 
-      return manager.save(Complaint, saved);
+      await manager.save(Complaint, saved);
+
+      if (files && files.length > 0) {
+        const fs = require('fs');
+        for (const file of files) {
+          const folder = `uploads/complaints/${saved.id}`;
+          if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
+          const newPath = `${folder}/${file.filename}`;
+          fs.renameSync(file.path, newPath);
+          const savedMedia = await manager.save(
+            GenMedia,
+            manager.create(GenMedia, { file_path: newPath, file_type: file.mimetype }),
+          );
+          await manager.save(
+            ComplaintMedia,
+            manager.create(ComplaintMedia, {
+              complaint: { id: saved.id },
+              media: { id: savedMedia.id },
+            }),
+          );
+        }
+      }
+      return saved;
     });
   }
 
