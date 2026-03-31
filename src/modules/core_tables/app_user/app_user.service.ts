@@ -1,7 +1,6 @@
-// app-user.service.ts
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsWhere, Repository } from 'typeorm';
 import { BaseCrudService } from 'src/common/crud/base-crud.service';
 import { AppUser } from './entities/appUser.entity';
 import { CreateAppUserDto } from './dto/create-app-user.dto';
@@ -16,8 +15,6 @@ export class AppUserService extends BaseCrudService<AppUser, CreateAppUserDto> {
     super(repository);
   }
 
-
-  
   override async create(dto: CreateAppUserDto): Promise<AppUser> {
     const existing = await this.repository.findOne({
       where: { mobile_no: dto.mobile_no, is_deleted: false },
@@ -38,6 +35,32 @@ export class AppUserService extends BaseCrudService<AppUser, CreateAppUserDto> {
       where: { is_deleted: false },
       relations: ['designation', 'department', 'reporting_to'],
     });
+  }
+
+  async findWithFilters(filters: {
+    department_id?: number;
+    designation_id?: number;
+    page?: number;
+    page_size?: number;
+  }): Promise<{ data: AppUser[]; total: number; page: number; page_size: number }> {
+    const page = filters.page ?? 1;
+    const page_size = filters.page_size ?? 50;
+    const skip = (page - 1) * page_size;
+
+    const where: FindOptionsWhere<AppUser> = { is_deleted: false };
+
+    if (filters.department_id) where.department = { id: filters.department_id };
+    if (filters.designation_id) where.designation = { id: filters.designation_id };
+
+    const [data, total] = await this.repository.findAndCount({
+      where,
+      relations: ['designation', 'department', 'reporting_to'],
+      skip,
+      take: page_size,
+      order: { created_at: 'DESC' },
+    });
+
+    return { data, total, page, page_size };
   }
 
   override async findOne(id: number): Promise<AppUser> {
