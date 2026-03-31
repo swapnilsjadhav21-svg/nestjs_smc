@@ -1,7 +1,7 @@
 // complaint.controller.ts
 import { Body, Controller, Get, Param,
-         ParseIntPipe, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+         ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ComplaintService } from './complaint.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
 import { UpdateComplaintStatusDto } from './dto/update-complaint-status.dto';
@@ -18,6 +18,50 @@ import { ComplaintStatus } from './enums/complaint-status.enum';
 @Controller('complaint')
 export class ComplaintController {
   constructor(private readonly complaintService: ComplaintService) {}
+
+  //for fliter
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Get complaints with filters and pagination' })
+  @ApiQuery({ name: 'zone_id', required: false, type: Number })
+  @ApiQuery({ name: 'prabhag_id', required: false, type: Number })
+  @ApiQuery({ name: 'department_id', required: false, type: Number })
+  @ApiQuery({ name: 'assigned_to', required: false, type: Number })
+  @ApiQuery({ name: 'citizen_id', required: false, type: Number })
+  @ApiQuery({ name: 'complaint_type_id', required: false, type: Number })
+  @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'start_date', required: false, type: String, description: 'Format: YYYY-MM-DD' })
+  @ApiQuery({ name: 'end_date', required: false, type: String, description: 'Format: YYYY-MM-DD' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'page_size', required: false, type: Number })
+  findWithFilters(
+    @Query('zone_id') zone_id?: number,
+    @Query('prabhag_id') prabhag_id?: number,
+    @Query('department_id') department_id?: number,
+    @Query('assigned_to') assigned_to?: number,
+    @Query('citizen_id') citizen_id?: number,
+    @Query('complaint_type_id') complaint_type_id?: number,
+    @Query('status') status?: string,
+    @Query('start_date') start_date?: string,
+    @Query('end_date') end_date?: string,
+    @Query('page') page?: number,
+    @Query('page_size') page_size?: number,
+  ) {
+    return this.complaintService.findWithFilters({
+      zone_id: zone_id ? Number(zone_id) : undefined,
+      prabhag_id: prabhag_id ? Number(prabhag_id) : undefined,
+      department_id: department_id ? Number(department_id) : undefined,
+      assigned_to: assigned_to ? Number(assigned_to) : undefined,
+      citizen_id: citizen_id ? Number(citizen_id) : undefined,
+      complaint_type_id: complaint_type_id ? Number(complaint_type_id) : undefined,
+      status,
+      start_date,
+      end_date,
+      page: page ? Number(page) : 1,
+      page_size: page_size ? Number(page_size) : 50,
+    });
+  }
 
   // Note: This controller does NOT extend BaseCrudController
   // because complaint has too much custom logic for the base to handle

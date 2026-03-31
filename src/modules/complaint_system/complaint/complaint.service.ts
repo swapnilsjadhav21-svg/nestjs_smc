@@ -11,6 +11,7 @@ import { ComplaintStatus } from './enums/complaint-status.enum';
 import { AppUser } from '../../core_tables/app_user/entities/appUser.entity';
 import { Zone } from '../../reference_tables/zone/entities/zone.entity';
 import { Department } from '../../reference_tables/department/entities/department.entity';
+import { Between, FindOptionsWhere } from 'typeorm';
 
 const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
   [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED],
@@ -31,7 +32,54 @@ export class ComplaintService {
     private readonly assignmentEngine: AssignmentEngineService,
   ) {}
 
+  //for pagination/filter
+    async findWithFilters(filters: {
+    zone_id?: number;
+    prabhag_id?: number;
+    department_id?: number;
+    assigned_to?: number;
+    citizen_id?: number;
+    complaint_type_id?: number;
+    status?: string;
+    start_date?: string;
+    end_date?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<{ data: Complaint[]; total: number; page: number; page_size: number }> {
+    const page = filters.page ?? 1;
+    const page_size = filters.page_size ?? 50;
+    const skip = (page - 1) * page_size;
+
+    const where: FindOptionsWhere<Complaint> = { is_deleted: false };
+
+    if (filters.status) where.status = filters.status;
+    if (filters.zone_id) where.zone = { id: filters.zone_id };
+    if (filters.prabhag_id) where.prabhag = { id: filters.prabhag_id };
+    if (filters.department_id) where.department = { id: filters.department_id };
+    if (filters.assigned_to) where.assigned_to = { id: filters.assigned_to };
+    if (filters.citizen_id) where.citizen = { id: filters.citizen_id };
+    if (filters.complaint_type_id) where.complaint_type = { id: filters.complaint_type_id };
+
+    if (filters.start_date && filters.end_date) {
+      where.created_at = Between(
+        new Date(filters.start_date),
+        new Date(filters.end_date),
+      );
+    }
+
+    const [data, total] = await this.complaintRepo.findAndCount({
+      where,
+      relations: ['citizen', 'complaint_type', 'assigned_to', 'department', 'zone', 'prabhag'],
+      skip,
+      take: page_size,
+      order: { created_at: 'DESC' },
+    });
+
+    return { data, total, page, page_size };
+  }
+
   async create(dto: CreateComplaintDto, citizenId: number): Promise<Complaint> {
+
 
     // Fix: Build entity object explicitly with correct types
     // Use undefined instead of null for optional relations
