@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { BaseCrudService } from 'src/common/crud/base-crud.service';
 import { Repository } from 'typeorm';
@@ -12,5 +12,17 @@ export class RoleService extends BaseCrudService<Role, CreateRoleDto> {
 		private readonly roleRepo: Repository<Role>,
 	) {
 		super(roleRepo);
+	}
+
+	override async create(dto: CreateRoleDto): Promise<Role> {
+		const existing = await this.roleRepo.findOne({
+			where: { code: dto.code, is_deleted: false },
+		});
+
+		if (existing) {
+			throw new ConflictException(`${dto.code} already exists`);
+		}
+
+		return super.create(dto);
 	}
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BaseCrudService } from 'src/common/crud/base-crud.service';
@@ -24,8 +24,8 @@ export class ComplaintAssignmentConfigService extends BaseCrudService<ComplaintA
     });
 
     if (existing) {
-      throw new BadRequestException(
-        `Config for complaint type ${dto.complaint_type.id} already exists`,
+      throw new ConflictException(
+        'Assignment config for this complaint type already exists',
       );
     }
 

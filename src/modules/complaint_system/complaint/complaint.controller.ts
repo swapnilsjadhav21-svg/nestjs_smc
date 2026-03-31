@@ -1,7 +1,10 @@
 // complaint.controller.ts
-import { Body, Controller, Get, Param,
-         ParseIntPipe, Post, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { BadRequestException, Body, Controller, Get, Param,
+         ParseIntPipe, Post, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { ComplaintService } from './complaint.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
 import { UpdateComplaintStatusDto } from './dto/update-complaint-status.dto';
@@ -69,12 +72,30 @@ export class ComplaintController {
   @Post()
   @UseGuards(CitizenGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Citizen creates a new complaint' })
+  @ApiOperation({ summary: 'Citizen creates a new complaint with optional media' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor('files', 4, {
+    storage: diskStorage({
+      destination: './uploads/temp',
+      filename: (req, file, cb) => cb(null, Date.now() + extname(file.originalname)),
+    }),
+    limits: { fileSize: 5 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+      const allowed = ['.jpg', '.jpeg', '.png'];
+      allowed.includes(extname(file.originalname).toLowerCase())
+        ? cb(null, true)
+        : cb(new BadRequestException('Only jpg, jpeg, png allowed'), false);
+    },
+  }))
   create(
     @Body() dto: CreateComplaintDto,
     @CurrentUser() user: JwtPayload,
+    @UploadedFiles() files?: Express.Multer.File[],
   ): Promise<Complaint> {
-    return this.complaintService.create(dto, user.sub);
+    if (typeof dto.complaint_type === 'string') dto.complaint_type = JSON.parse(dto.complaint_type);
+    if (typeof dto.prabhag === 'string') dto.prabhag = JSON.parse(dto.prabhag);
+    if (typeof dto.location === 'string') dto.location = JSON.parse(dto.location);
+    return this.complaintService.create(dto, user.sub, files);
   }
 
   @Get('my')
