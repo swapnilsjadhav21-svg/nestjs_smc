@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { BaseCrudController } from 'src/common/crud/base-crud.controller';
 import { AdminGuard } from 'src/auth/guards/admin.guard';
 import { AppUser } from './entities/appUser.entity';
 import { CreateAppUserDto } from './dto/create-app-user.dto';
@@ -11,15 +10,14 @@ import { AppUserService } from './app_user.service';
 @ApiBearerAuth('JWT-auth')
 @UseGuards(AdminGuard)
 @Controller('user')
-export class AppUserController extends BaseCrudController<AppUser, CreateAppUserDto> {
+export class AppUserController {
   constructor(private readonly appUserService: AppUserService) {
-    super(appUserService);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create new officer/user' })
-  override create(@Body() dto: CreateAppUserDto): Promise<AppUser> {
-    return super.create(dto);
+  create(@Body() dto: CreateAppUserDto): Promise<AppUser> {
+    return this.appUserService.create(dto);
   }
 
   @Get()
@@ -44,7 +42,7 @@ export class AppUserController extends BaseCrudController<AppUser, CreateAppUser
 
   @Get(':id')
   @ApiOperation({ summary: 'Get user by ID' })
-  override findOne(@Param('id', ParseIntPipe) id: number): Promise<AppUser> {
+  findOne(@Param('id', ParseIntPipe) id: number): Promise<AppUser> {
     return this.appUserService.findOne(id);
   }
 
