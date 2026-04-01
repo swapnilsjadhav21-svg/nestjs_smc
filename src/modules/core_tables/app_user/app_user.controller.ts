@@ -65,14 +65,3 @@ export class AppUserController {
   }
 }
 
-// ```
-
-// ---
-
-// **Test on Swagger:**
-// ```
-// GET /user                              → all users, default pagination
-// GET /user?page=1&page_size=2           → 2 users per page
-// GET /user?department_id=1             → only users in department 1
-// GET /user?designation_id=2&page=1     → users with designation 2
-// GET /user?department_id=1&page=2&page_size=2  → combined filter + pagination

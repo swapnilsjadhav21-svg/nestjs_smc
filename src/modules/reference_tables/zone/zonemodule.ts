@@ -6,6 +6,7 @@ import { Zone } from './entities/zone.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Zone])],
   providers: [ZoneService],
-  controllers: [ZoneController]
+  controllers: [ZoneController],
+  exports: [ZoneService],
 })
 export class ZoneModule {}
