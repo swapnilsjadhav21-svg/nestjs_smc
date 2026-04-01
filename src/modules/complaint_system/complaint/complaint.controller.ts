@@ -1,6 +1,6 @@
 // complaint.controller.ts
 import { BadRequestException, Body, Controller, Get, Param,
-         ParseIntPipe, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+         ParseIntPipe, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -108,7 +108,7 @@ export class ComplaintController {
     return this.complaintService.findMyCitizenComplaints(user.sub);
   }
 
-  @Post(':id/reopen')
+  @Patch(':id/reopen')
   @UseGuards(CitizenGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Citizen reopens a resolved complaint' })
