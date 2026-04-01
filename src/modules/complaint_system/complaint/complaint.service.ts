@@ -19,7 +19,7 @@ import { GenMedia } from '../gen_media/entities/gen_media.entity';
 import { ComplaintMedia } from '../complaint_media/entities/complaint_media.entity';
 
 const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
-  [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED],
+  [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED, ComplaintStatus.IN_PROGRESS],
   [ComplaintStatus.ASSIGNED]:    [ComplaintStatus.IN_PROGRESS],
   [ComplaintStatus.IN_PROGRESS]: [ComplaintStatus.RESOLVED, ComplaintStatus.REJECTED],
   [ComplaintStatus.RESOLVED]:    [ComplaintStatus.REOPENED],
@@ -256,7 +256,7 @@ export class ComplaintService {
     return this.complaintRepo.save(complaint);
   }
 
-  async updateStatus(
+  async updateStatusByOfficer(
     complaintId: number,
     dto: UpdateComplaintStatusDto,
     officerId: number,
@@ -279,6 +279,39 @@ export class ComplaintService {
     }
 
     complaint.status = dto.status;
+    return this.complaintRepo.save(complaint);
+  }
+
+  async updateStatusByCitizen(
+    complaintId: number,
+    status: ComplaintStatus,
+    citizenId: number,
+  ): Promise<Complaint> {
+    const complaint = await this.findOne(complaintId);
+
+    if (complaint.citizen?.id !== citizenId) {
+      throw new ForbiddenException(
+        'You can only update your own complaints',
+      );
+    }
+
+    const allowedForCitizen = [ComplaintStatus.REOPENED, ComplaintStatus.ESCALATED];
+    if (!allowedForCitizen.includes(status)) {
+      throw new BadRequestException(
+        'Citizens can only reopen or escalate complaints',
+      );
+    }
+
+    const currentStatus = complaint.status as ComplaintStatus;
+    const allowedNext = ALLOWED_TRANSITIONS[currentStatus];
+
+    if (!allowedNext.includes(status)) {
+      throw new BadRequestException(
+        `Cannot transition from ${currentStatus} to ${status}. Allowed: ${allowedNext.join(', ')}`,
+      );
+    }
+
+    complaint.status = status;
     return this.complaintRepo.save(complaint);
   }
 
