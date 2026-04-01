@@ -76,29 +76,47 @@ export class ComplaintController {
   @ApiOperation({ summary: 'Citizen creates a new complaint with optional media' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
-  schema: {
-    type: 'object',
-    properties: {
-      complaint_type: { type: 'string' },
-      complaint: { type: 'string' },
-      prabhag: { type: 'string' },
-      location: { type: 'string' },
-      files: {
-        type: 'array',
-        items: {
+    schema: {
+      type: 'object',
+      required: ['complaint_type', 'complaint', 'prabhag', 'files'],
+      properties: {
+        complaint_type: {
           type: 'string',
-          format: 'binary',
+          example: '{"id": 2}',
+          description: 'JSON string with complaint type id',
+        },
+        complaint: {
+          type: 'string',
+          example: 'Garbage not collected for 3 days near market area',
+        },
+        prabhag: {
+          type: 'string',
+          example: '{"id": 5}',
+          description: 'JSON string with prabhag id',
+        },
+        location: {
+          type: 'string',
+          example: '{"latitude": 17.6599, "longitude": 75.9064}',
+          description: 'Optional JSON string with complaint coordinates',
+        },
+        files: {
+          type: 'array',
+          maxItems: 4,
+          description: 'Maximum 4 files allowed',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
         },
       },
     },
-  },
-})
+  })
   @UseInterceptors(FilesInterceptor('files', 4, {
     storage: diskStorage({
       destination: './uploads/temp',
       filename: (req, file, cb) => cb(null, Date.now() + extname(file.originalname)),
     }),
-    limits: { fileSize: 5 * 1024 * 1024 },
+    limits: { fileSize: 5 * 1024 * 1024, files: 4 },
     fileFilter: (req, file, cb) => {
       const allowed = ['.jpg', '.jpeg', '.png'];
       allowed.includes(extname(file.originalname).toLowerCase())
@@ -111,6 +129,9 @@ export class ComplaintController {
     @CurrentUser() user: JwtPayload,
     @UploadedFiles() files?: Express.Multer.File[],
   ): Promise<Complaint> {
+    if (files && files.length > 4) {
+      throw new BadRequestException('Maximum 4 files allowed');
+    }
     if (typeof dto.complaint_type === 'string') dto.complaint_type = JSON.parse(dto.complaint_type);
     if (typeof dto.prabhag === 'string') dto.prabhag = JSON.parse(dto.prabhag);
     if (typeof dto.location === 'string') dto.location = JSON.parse(dto.location);
