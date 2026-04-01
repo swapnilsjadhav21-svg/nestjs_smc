@@ -22,7 +22,7 @@ import { ComplaintMedia } from '../complaint_media/entities/complaint_media.enti
 import * as fs from 'fs';
 
 const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
-  [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED],
+  [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED, ComplaintStatus.IN_PROGRESS],
   [ComplaintStatus.ASSIGNED]:    [ComplaintStatus.IN_PROGRESS],
   [ComplaintStatus.IN_PROGRESS]: [ComplaintStatus.RESOLVED, ComplaintStatus.REJECTED],
   [ComplaintStatus.RESOLVED]:    [ComplaintStatus.REOPENED],

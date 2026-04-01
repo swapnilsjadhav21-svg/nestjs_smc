@@ -1,7 +1,7 @@
 // complaint.controller.ts
 import { BadRequestException, Body, Controller, Get, Param,
          ParseIntPipe, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
@@ -75,6 +75,24 @@ export class ComplaintController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Citizen creates a new complaint with optional media' })
   @ApiConsumes('multipart/form-data')
+  @ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      complaint_type: { type: 'string' },
+      complaint: { type: 'string' },
+      prabhag: { type: 'string' },
+      location: { type: 'string' },
+      files: {
+        type: 'array',
+        items: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  },
+})
   @UseInterceptors(FilesInterceptor('files', 4, {
     storage: diskStorage({
       destination: './uploads/temp',
