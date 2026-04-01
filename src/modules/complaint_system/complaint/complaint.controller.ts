@@ -1,21 +1,22 @@
 // complaint.controller.ts
 import { BadRequestException, Body, Controller, Get, Param,
-         ParseIntPipe, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+         ParseIntPipe, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ComplaintService } from './complaint.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
-import { UpdateComplaintStatusDto } from './dto/update-complaint-status.dto';
-import { ReassignComplaintDto } from './dto/reassign-complaint.dto';
+import {
+  CitizenUpdateComplaintDto,
+  OfficerUpdateComplaintDto,
+} from './dto/update-complaint-status.dto';
 import { Complaint } from './entities/complaint.entity';
 import { CitizenGuard } from 'src/auth/guards/citizen.guard';
 import { OfficerGuard } from 'src/auth/guards/officer.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
 import type { JwtPayload } from 'src/auth/strategies/jwt.strategy';
-import { ComplaintStatus } from './enums/complaint-status.enum';
 
 @ApiTags('Complaint')
 @Controller('complaint')
@@ -108,34 +109,16 @@ export class ComplaintController {
     return this.complaintService.findMyCitizenComplaints(user.sub);
   }
 
-  @Post(':id/reopen')
+  @Patch(':id/citizen')
   @UseGuards(CitizenGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Citizen reopens a resolved complaint' })
-  reopen(
+  @ApiOperation({ summary: 'Citizen updates complaint — reopen or escalate only' })
+  citizenUpdate(
     @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CitizenUpdateComplaintDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<Complaint> {
-    return this.complaintService.updateStatusByCitizen(
-      id,
-      ComplaintStatus.REOPENED,
-      user.sub,
-    );
-  }
-
-  @Post(':id/escalate')
-  @UseGuards(CitizenGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Citizen escalates a rejected complaint' })
-  escalate(
-    @Param('id', ParseIntPipe) id: number,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint> {
-    return this.complaintService.updateStatusByCitizen(
-      id,
-      ComplaintStatus.ESCALATED,
-      user.sub,
-    );
+    return this.complaintService.citizenUpdate(id, dto, user.sub);
   }
 
   @Get('assigned')
@@ -168,38 +151,15 @@ export class ComplaintController {
     return this.complaintService.findOne(id);
   }
 
-  @Post(':id/claim')
+  @Patch(':id/officer')
   @UseGuards(OfficerGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Officer claims an unassigned NEW complaint' })
-  claim(
+  @ApiOperation({ summary: 'Officer updates complaint — status, assign, zone, dept' })
+  officerUpdate(
     @Param('id', ParseIntPipe) id: number,
+    @Body() dto: OfficerUpdateComplaintDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<Complaint> {
-    return this.complaintService.claimComplaint(id, user.sub);
-  }
-
-  @Post(':id/status')
-  @UseGuards(OfficerGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Officer updates complaint status' })
-  updateStatus(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateComplaintStatusDto,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint> {
-    return this.complaintService.updateStatusByOfficer(id, dto, user.sub);
-  }
-
-  @Post(':id/reassign')
-  @UseGuards(OfficerGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Officer reassigns complaint to another officer' })
-  reassign(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: ReassignComplaintDto,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint> {
-    return this.complaintService.reassign(id, dto, user.sub);
+    return this.complaintService.officerUpdate(id, dto, user.sub);
   }
 }

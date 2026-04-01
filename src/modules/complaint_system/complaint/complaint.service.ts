@@ -4,8 +4,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Between, DataSource, FindOptionsWhere, Repository } from 'typeorm';
 import { Complaint } from './entities/complaint.entity';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
-import { UpdateComplaintStatusDto } from './dto/update-complaint-status.dto';
-import { ReassignComplaintDto } from './dto/reassign-complaint.dto';
+import {
+  CitizenUpdateComplaintDto,
+  OfficerUpdateComplaintDto,
+} from './dto/update-complaint-status.dto';
 import { AssignmentEngineService } from './assignment-engine.service';
 import { ComplaintStatus } from './enums/complaint-status.enum';
 import { AppUser } from '../../core_tables/app_user/entities/appUser.entity';
@@ -17,6 +19,7 @@ import { GenMediaService } from '../gen_media/gen_media.service';
 import { ComplaintMediaService } from '../complaint_media/complaint_media.service';
 import { GenMedia } from '../gen_media/entities/gen_media.entity';
 import { ComplaintMedia } from '../complaint_media/entities/complaint_media.entity';
+import * as fs from 'fs';
 
 const ALLOWED_TRANSITIONS: Record<ComplaintStatus, ComplaintStatus[]> = {
   [ComplaintStatus.NEW]:         [ComplaintStatus.ASSIGNED],
@@ -149,7 +152,6 @@ export class ComplaintService {
       await manager.save(Complaint, saved);
 
       if (files && files.length > 0) {
-        const fs = require('fs');
         for (const file of files) {
           const folder = `uploads/complaints/${saved.id}`;
           if (!fs.existsSync(folder)) fs.mkdirSync(folder, { recursive: true });
@@ -235,37 +237,16 @@ export class ComplaintService {
       .getMany();
   }
 
-  async claimComplaint(complaintId: number, officerId: number): Promise<Complaint> {
-    const complaint = await this.findOne(complaintId);
-
-    if (complaint.status !== ComplaintStatus.NEW) {
-      throw new BadRequestException(
-        `Only NEW complaints can be claimed. Current status: ${complaint.status}`,
-      );
-    }
-
-    if (complaint.assigned_to) {
-      throw new BadRequestException(`Complaint is already assigned to an officer`);
-    }
-
-    const officer = new AppUser();
-    officer.id = officerId;
-    complaint.assigned_to = officer;
-    complaint.status = ComplaintStatus.ASSIGNED;
-
-    return this.complaintRepo.save(complaint);
-  }
-
-  async updateStatusByOfficer(
+  async citizenUpdate(
     complaintId: number,
-    dto: UpdateComplaintStatusDto,
-    officerId: number,
+    dto: CitizenUpdateComplaintDto,
+    citizenId: number,
   ): Promise<Complaint> {
     const complaint = await this.findOne(complaintId);
 
-    if (complaint.assigned_to?.id !== officerId) {
+    if (complaint.citizen?.id !== citizenId) {
       throw new ForbiddenException(
-        'You can only update status of complaints assigned to you',
+        'You can only update your own complaints',
       );
     }
 
@@ -282,61 +263,79 @@ export class ComplaintService {
     return this.complaintRepo.save(complaint);
   }
 
-  async updateStatusByCitizen(
+  async officerUpdate(
     complaintId: number,
-    status: ComplaintStatus,
-    citizenId: number,
-  ): Promise<Complaint> {
-    const complaint = await this.findOne(complaintId);
-
-    if (complaint.citizen?.id !== citizenId) {
-      throw new ForbiddenException(
-        'You can only update your own complaints',
-      );
-    }
-
-    const allowedForCitizen = [ComplaintStatus.REOPENED, ComplaintStatus.ESCALATED];
-    if (!allowedForCitizen.includes(status)) {
-      throw new BadRequestException(
-        'Citizens can only reopen or escalate complaints',
-      );
-    }
-
-    const currentStatus = complaint.status as ComplaintStatus;
-    const allowedNext = ALLOWED_TRANSITIONS[currentStatus];
-
-    if (!allowedNext.includes(status)) {
-      throw new BadRequestException(
-        `Cannot transition from ${currentStatus} to ${status}. Allowed: ${allowedNext.join(', ')}`,
-      );
-    }
-
-    complaint.status = status;
-    return this.complaintRepo.save(complaint);
-  }
-
-  async reassign(
-    complaintId: number,
-    dto: ReassignComplaintDto,
+    dto: OfficerUpdateComplaintDto,
     officerId: number,
   ): Promise<Complaint> {
     const complaint = await this.findOne(complaintId);
+
+    if (dto.status) {
+      const isClaiming =
+        dto.status === ComplaintStatus.ASSIGNED &&
+        !complaint.assigned_to;
+
+      if (!isClaiming && complaint.assigned_to?.id !== officerId) {
+        throw new ForbiddenException(
+          'You can only update status of complaints assigned to you',
+        );
+      }
+
+      if (isClaiming) {
+        if (complaint.status !== ComplaintStatus.NEW) {
+          throw new BadRequestException(
+            'Only NEW complaints can be claimed',
+          );
+        }
+        const officer = new AppUser();
+        officer.id = officerId;
+        complaint.assigned_to = officer;
+      }
+
+      const allowedNext = ALLOWED_TRANSITIONS[complaint.status as ComplaintStatus];
+      if (!allowedNext.includes(dto.status)) {
+        throw new BadRequestException(
+          `Cannot transition from ${complaint.status} to ${dto.status}. Allowed: ${allowedNext.join(', ')}`,
+        );
+      }
+
+      complaint.status = dto.status;
+    }
 
     const newOfficer = await this.appUserRepo.findOne({
       where: { id: dto.assigned_to_id, status: 'ACTIVE', is_deleted: false },
     });
 
-    if (!newOfficer) {
-      throw new NotFoundException(
-        `Active officer with id ${dto.assigned_to_id} not found`,
-      );
+    if (dto.assigned_to_id) {
+      if (!newOfficer) {
+        throw new NotFoundException(
+          `Active officer with id ${dto.assigned_to_id} not found`,
+        );
+      }
+
+      complaint.assigned_to = newOfficer;
+
+      if (complaint.status === ComplaintStatus.NEW) {
+        complaint.status = ComplaintStatus.ASSIGNED;
+      }
     }
 
-    complaint.assigned_to = newOfficer;
+    if (dto.department_id) {
+      const dept = new Department();
+      dept.id = dto.department_id;
+      complaint.department = dept;
+    }
 
-    // If complaint was NEW (unassigned), mark it ASSIGNED now
-    if (complaint.status === ComplaintStatus.NEW) {
-      complaint.status = ComplaintStatus.ASSIGNED;
+    if (dto.zone_id) {
+      const zone = new Zone();
+      zone.id = dto.zone_id;
+      complaint.zone = zone;
+    }
+
+    if (dto.prabhag_id) {
+      const prabhag = new Prabhag();
+      prabhag.id = dto.prabhag_id;
+      complaint.prabhag = prabhag;
     }
 
     return this.complaintRepo.save(complaint);

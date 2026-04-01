@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ComplaintResponse } from './entities/complaint_response.entity';
 import { CreateComplaintResponseDto } from './dto/create-complaint-response.dto';
 import { ComplaintResponseService } from './complaint_response.service';
@@ -18,8 +18,7 @@ export class ComplaintResponseController {
   @Post(':id/complaint-response')
   @UseGuards(OfficerGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Post a response to a complaint' })
-  @ApiBody({ type: CreateComplaintResponseDto })
+  @ApiOperation({ summary: 'Officer posts response to complaint' })
   createResponse(
     @Param('id', ParseIntPipe) complaintId: number,
     @Body() dto: CreateComplaintResponseDto,

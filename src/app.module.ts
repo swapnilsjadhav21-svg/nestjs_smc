@@ -1,8 +1,6 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-//import { ComplaintsModule } from './complaints/complaints.module';
-//import { SequelizeModule } from "@nestjs/sequelize"
 import { DepartmentModule } from './modules/reference_tables/department/department.module';
 import { DesignationModule } from './modules/reference_tables/designation/designation.module';
 import { RoleModule } from './modules/reference_tables/role/role.module';
@@ -12,7 +10,6 @@ import { PrabhagZoneMappingModule } from './modules/reference_tables/prabhag_zon
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { join } from 'path';
-//import { Prabhag } from './modules/prabhag/entities/prabhag.entity';
 import { ComplaintTypeModule } from './modules/complaint_system/complaint_type/complaint_type.module';
 import { ComplaintAssignmentStrategyModule } from './modules/complaint_system/complaint_assignment_strategy/complaint_assignment_strategy.module';
 import { ComplaintAssignmentConfigModule } from './modules/complaint_system/complaint_assignment_config/complaint_assignment_config.module';
