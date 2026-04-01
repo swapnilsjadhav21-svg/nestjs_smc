@@ -109,7 +109,7 @@ export class ComplaintController {
     return this.complaintService.findMyCitizenComplaints(user.sub);
   }
 
-  @Patch(':id/citizen')
+  @Patch(':id/reopen')
   @UseGuards(CitizenGuard)
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ summary: 'Citizen updates complaint — reopen or escalate only' })
