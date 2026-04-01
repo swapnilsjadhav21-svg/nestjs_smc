@@ -8,8 +8,9 @@ class RefIdDto {
 }
 
 export class CreateComplaintResponseDto {
-  @ApiProperty({ type: RefIdDto })
-  complaint: RefIdDto;
+  @ApiProperty({ type: RefIdDto, required: false })
+  @IsOptional()
+  complaint?: RefIdDto;
 
   @ApiProperty({ example: 'We have assigned an officer to fix this issue' })
   @IsString()

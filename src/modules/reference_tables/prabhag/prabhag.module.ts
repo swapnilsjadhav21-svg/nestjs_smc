@@ -8,5 +8,6 @@ import { Prabhag } from './entities/prabhag.entity';
   imports: [TypeOrmModule.forFeature([Prabhag])],
   providers: [PrabhagService],
   controllers: [PrabhagController],
+  exports: [PrabhagService],
 })
 export class PrabhagModule {}
