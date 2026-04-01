@@ -14,6 +14,8 @@ export class ComplaintResponseService extends BaseCrudService<ComplaintResponse,
     super(repository);
   }
 
+  
+
   async findByComplaintId(complaintId: number): Promise<ComplaintResponse[]> {
     return this.repository.find({
       where: { complaint: { id: complaintId }, is_deleted: false },

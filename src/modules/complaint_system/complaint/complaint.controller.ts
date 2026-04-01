@@ -79,9 +79,15 @@ export class ComplaintController {
   schema: {
     type: 'object',
     properties: {
-      complaint_type: { type: 'string' },
-      complaint: { type: 'string' },
-      prabhag: { type: 'string' },
+      complaint_type: { type: 'string',
+        example:'1'
+       },
+      complaint: { type: 'string',
+        example:'zop yet nahi'
+       },
+      prabhag: { type: 'string',
+        example:'1'
+       },
       location: { type: 'string' },
       files: {
         type: 'array',
