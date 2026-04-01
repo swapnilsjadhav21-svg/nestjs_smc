@@ -116,9 +116,9 @@ export class ComplaintController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ): Promise<Complaint> {
-    return this.complaintService.updateStatus(
+    return this.complaintService.updateStatusByCitizen(
       id,
-      { status: ComplaintStatus.REOPENED },
+      ComplaintStatus.REOPENED,
       user.sub,
     );
   }
@@ -131,9 +131,9 @@ export class ComplaintController {
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ): Promise<Complaint> {
-    return this.complaintService.updateStatus(
+    return this.complaintService.updateStatusByCitizen(
       id,
-      { status: ComplaintStatus.ESCALATED },
+      ComplaintStatus.ESCALATED,
       user.sub,
     );
   }
@@ -188,7 +188,7 @@ export class ComplaintController {
     @Body() dto: UpdateComplaintStatusDto,
     @CurrentUser() user: JwtPayload,
   ): Promise<Complaint> {
-    return this.complaintService.updateStatus(id, dto, user.sub);
+    return this.complaintService.updateStatusByOfficer(id, dto, user.sub);
   }
 
   @Post(':id/reassign')

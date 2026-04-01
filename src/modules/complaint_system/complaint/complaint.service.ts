@@ -256,7 +256,7 @@ export class ComplaintService {
     return this.complaintRepo.save(complaint);
   }
 
-  async updateStatus(
+  async updateStatusByOfficer(
     complaintId: number,
     dto: UpdateComplaintStatusDto,
     officerId: number,
@@ -279,6 +279,39 @@ export class ComplaintService {
     }
 
     complaint.status = dto.status;
+    return this.complaintRepo.save(complaint);
+  }
+
+  async updateStatusByCitizen(
+    complaintId: number,
+    status: ComplaintStatus,
+    citizenId: number,
+  ): Promise<Complaint> {
+    const complaint = await this.findOne(complaintId);
+
+    if (complaint.citizen?.id !== citizenId) {
+      throw new ForbiddenException(
+        'You can only update your own complaints',
+      );
+    }
+
+    const allowedForCitizen = [ComplaintStatus.REOPENED, ComplaintStatus.ESCALATED];
+    if (!allowedForCitizen.includes(status)) {
+      throw new BadRequestException(
+        'Citizens can only reopen or escalate complaints',
+      );
+    }
+
+    const currentStatus = complaint.status as ComplaintStatus;
+    const allowedNext = ALLOWED_TRANSITIONS[currentStatus];
+
+    if (!allowedNext.includes(status)) {
+      throw new BadRequestException(
+        `Cannot transition from ${currentStatus} to ${status}. Allowed: ${allowedNext.join(', ')}`,
+      );
+    }
+
+    complaint.status = status;
     return this.complaintRepo.save(complaint);
   }
 

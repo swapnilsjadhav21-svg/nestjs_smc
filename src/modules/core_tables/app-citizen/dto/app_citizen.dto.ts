@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsEmail, IsOptional, IsString } from 'class-validator';
 
 export class CreateAppCitizenDto {
 
@@ -10,4 +10,14 @@ export class CreateAppCitizenDto {
   @ApiProperty({ example: 'Sagar Dhale' })
   @IsString()
   name: string;
+
+  @ApiProperty({ example: '123 Main Street, Solapur', required: false })
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiProperty({ example: 'citizen@email.com', required: false })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
 }
