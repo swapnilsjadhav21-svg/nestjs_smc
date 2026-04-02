@@ -50,7 +50,7 @@ const mockDataSource = {
 };
 
 // --- Helper ---
-const makeComplaint = (overrides = {}): Complaint => ({
+const makeComplaint = (overrides: any = {}): Complaint => ({
   id: 1,
   citizen: { id: 10 } as any,
   complaint_type: { id: 1 } as any,
@@ -67,7 +67,7 @@ const makeComplaint = (overrides = {}): Complaint => ({
   created_by: null,
   updated_by: null,
   ...overrides,
-} as Complaint);
+} as unknown as Complaint);
 
 describe('ComplaintService', () => {
   let service: ComplaintService;
@@ -266,8 +266,8 @@ describe('ComplaintService', () => {
 
     it('should throw BadRequestException when officer has no department', async () => {
       mockAppUserRepo.findOne
-        .mockResolvedValueOnce({ id: 5, department: null } as AppUser)
-        .mockResolvedValueOnce({ id: 5, department: null } as AppUser);
+        .mockResolvedValueOnce({ id: 5, department: null } as unknown as AppUser)
+        .mockResolvedValueOnce({ id: 5, department: null } as unknown as AppUser);
 
       await expect(service.findTeamComplaints(5)).rejects.toThrow(BadRequestException);
       await expect(service.findTeamComplaints(5)).rejects.toThrow(
