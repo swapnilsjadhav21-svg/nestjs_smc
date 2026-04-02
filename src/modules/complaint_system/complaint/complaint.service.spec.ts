@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ComplaintService } from './complaint.service';
 import { Complaint } from './entities/complaint.entity';
 import { AppUser } from '../../core_tables/app_user/entities/appUser.entity';
@@ -13,16 +13,13 @@ import { ComplaintType } from '../complaint_type/entities/complaint_type.entity'
 import { Prabhag } from '../../reference_tables/prabhag/entities/prabhag.entity';
 
 // --- Mocks ---
-
 const mockComplaintRepo = {
   findOne: jest.fn(),
-  find: jest.fn(),
-  findAndCount: jest.fn(),
-  create: jest.fn(),
   save: jest.fn(),
-  manager: {
-    findOne: jest.fn(),
-  },
+  find: jest.fn(),
+  create: jest.fn(),
+  findAndCount: jest.fn(),
+  manager: { findOne: jest.fn() },
   createQueryBuilder: jest.fn(),
 };
 
@@ -42,7 +39,6 @@ const mockComplaintMediaService = {
   create: jest.fn(),
 };
 
-// DataSource mock for transactions
 const mockManager = {
   create: jest.fn(),
   save: jest.fn(),
@@ -53,7 +49,7 @@ const mockDataSource = {
   transaction: jest.fn().mockImplementation((cb) => cb(mockManager)),
 };
 
-// --- Helper: build a base complaint object ---
+// --- Helper ---
 const makeComplaint = (overrides = {}): Complaint => ({
   id: 1,
   citizen: { id: 10 } as any,
@@ -77,15 +73,21 @@ describe('ComplaintService', () => {
   let service: ComplaintService;
 
   beforeEach(async () => {
+    jest.clearAllMocks();
+
+    // Default save just returns whatever was passed in
+    mockComplaintRepo.save.mockImplementation((c) => Promise.resolve(c));
+    mockAppUserRepo.findOne.mockResolvedValue(undefined);
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ComplaintService,
         { provide: getRepositoryToken(Complaint), useValue: mockComplaintRepo },
         { provide: getRepositoryToken(AppUser), useValue: mockAppUserRepo },
         { provide: AssignmentEngineService, useValue: mockAssignmentEngine },
+        { provide: DataSource, useValue: mockDataSource },
         { provide: GenMediaService, useValue: mockGenMediaService },
         { provide: ComplaintMediaService, useValue: mockComplaintMediaService },
-        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
@@ -108,7 +110,9 @@ describe('ComplaintService', () => {
     };
 
     it('should throw NotFoundException if complaint type not found', async () => {
-      mockComplaintRepo.manager.findOne.mockResolvedValueOnce(null); // complaint type not found
+      mockComplaintRepo.manager.findOne
+        .mockResolvedValueOnce(null)  // call 1: not found
+        .mockResolvedValueOnce(null); // call 2: not found
 
       await expect(service.create(dto as any, 10)).rejects.toThrow(NotFoundException);
       await expect(service.create(dto as any, 10)).rejects.toThrow(
@@ -117,29 +121,27 @@ describe('ComplaintService', () => {
     });
 
     it('should throw NotFoundException if prabhag not found', async () => {
-    // Each create() call consumes the mocks — so set up enough for both calls
-    mockComplaintRepo.manager.findOne
-      .mockResolvedValueOnce({ id: 1 } as ComplaintType)  // call 1: complaint type found
-      .mockResolvedValueOnce(null)                         // call 1: prabhag not found
-      .mockResolvedValueOnce({ id: 1 } as ComplaintType)  // call 2: complaint type found
-      .mockResolvedValueOnce(null);                        // call 2: prabhag not found
+      mockComplaintRepo.manager.findOne
+        .mockResolvedValueOnce({ id: 1 } as ComplaintType)  // call 1: type found
+        .mockResolvedValueOnce(null)                         // call 1: prabhag not found
+        .mockResolvedValueOnce({ id: 1 } as ComplaintType)  // call 2: type found
+        .mockResolvedValueOnce(null);                        // call 2: prabhag not found
 
-    await expect(service.create(dto as any, 10)).rejects.toThrow(NotFoundException);
-    await expect(service.create(dto as any, 10)).rejects.toThrow(
-      'Prabhag with id 2 not found',
-    );
-  });
+      await expect(service.create(dto as any, 10)).rejects.toThrow(NotFoundException);
+      await expect(service.create(dto as any, 10)).rejects.toThrow(
+        'Prabhag with id 2 not found',
+      );
+    });
 
     it('should create complaint and run assignment engine', async () => {
       const savedComplaint = makeComplaint();
 
       mockComplaintRepo.manager.findOne
-        .mockResolvedValueOnce({ id: 1 } as ComplaintType)  // complaint type found
-        .mockResolvedValueOnce({ id: 2 } as Prabhag);       // prabhag found
+        .mockResolvedValueOnce({ id: 1 } as ComplaintType)
+        .mockResolvedValueOnce({ id: 2 } as Prabhag);
 
       mockManager.create.mockReturnValue(savedComplaint);
       mockManager.save.mockResolvedValue(savedComplaint);
-
       mockAssignmentEngine.assign.mockResolvedValue({
         officer: { id: 5 } as AppUser,
         zone_id: 3,
@@ -162,7 +164,11 @@ describe('ComplaintService', () => {
 
       mockManager.create.mockReturnValue(savedComplaint);
       mockManager.save.mockResolvedValue(savedComplaint);
-      mockAssignmentEngine.assign.mockResolvedValue({ officer: null, zone_id: null, department_id: null });
+      mockAssignmentEngine.assign.mockResolvedValue({
+        officer: null,
+        zone_id: null,
+        department_id: null,
+      });
 
       const result = await service.create(dto as any, 10, []);
 
@@ -186,10 +192,14 @@ describe('ComplaintService', () => {
     });
 
     it('should throw NotFoundException when complaint not found', async () => {
-      mockComplaintRepo.findOne.mockResolvedValue(null);
+      mockComplaintRepo.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
 
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
-      await expect(service.findOne(999)).rejects.toThrow('Complaint with id 999 not found');
+      await expect(service.findOne(999)).rejects.toThrow(
+        'Complaint with id 999 not found',
+      );
     });
   });
 
@@ -244,7 +254,9 @@ describe('ComplaintService', () => {
   // ─────────────────────────────────────────────
   describe('findTeamComplaints', () => {
     it('should throw NotFoundException when officer not found', async () => {
-      mockAppUserRepo.findOne.mockResolvedValue(null);
+      mockAppUserRepo.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
 
       await expect(service.findTeamComplaints(99)).rejects.toThrow(NotFoundException);
       await expect(service.findTeamComplaints(99)).rejects.toThrow(
@@ -253,7 +265,9 @@ describe('ComplaintService', () => {
     });
 
     it('should throw BadRequestException when officer has no department', async () => {
-      mockAppUserRepo.findOne.mockResolvedValue({ id: 5, department: null } as AppUser);
+      mockAppUserRepo.findOne
+        .mockResolvedValueOnce({ id: 5, department: null } as AppUser)
+        .mockResolvedValueOnce({ id: 5, department: null } as AppUser);
 
       await expect(service.findTeamComplaints(5)).rejects.toThrow(BadRequestException);
       await expect(service.findTeamComplaints(5)).rejects.toThrow(
@@ -264,12 +278,8 @@ describe('ComplaintService', () => {
     it('should return team complaints when officer has department', async () => {
       const complaints = [makeComplaint(), makeComplaint({ id: 2 })];
 
-      mockAppUserRepo.findOne.mockResolvedValue({
-        id: 5,
-        department: { id: 1 },
-      } as AppUser);
+      mockAppUserRepo.findOne.mockResolvedValue({ id: 5, department: { id: 1 } } as AppUser);
 
-      // mock queryBuilder chain
       const mockQB = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -291,7 +301,9 @@ describe('ComplaintService', () => {
   // ─────────────────────────────────────────────
   describe('citizenUpdate', () => {
     it('should throw ForbiddenException when citizen updates another citizens complaint', async () => {
-      mockComplaintRepo.findOne.mockResolvedValue(makeComplaint({ citizen: { id: 99 } }));
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ citizen: { id: 99 } }),
+      );
 
       await expect(
         service.citizenUpdate(1, { status: ComplaintStatus.REOPENED }, 10),
@@ -306,7 +318,6 @@ describe('ComplaintService', () => {
         makeComplaint({ citizen: { id: 10 }, status: ComplaintStatus.NEW }),
       );
 
-      // NEW → REOPENED is not allowed
       await expect(
         service.citizenUpdate(1, { status: ComplaintStatus.REOPENED }, 10),
       ).rejects.toThrow(BadRequestException);
@@ -341,10 +352,7 @@ describe('ComplaintService', () => {
   describe('officerUpdate', () => {
     it('should throw ForbiddenException when officer updates complaint not assigned to them', async () => {
       mockComplaintRepo.findOne.mockResolvedValue(
-        makeComplaint({
-          status: ComplaintStatus.ASSIGNED,
-          assigned_to: { id: 99 }, // assigned to different officer
-        }),
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: { id: 99 } }),
       );
 
       await expect(
@@ -353,10 +361,7 @@ describe('ComplaintService', () => {
     });
 
     it('should allow officer to claim a NEW unassigned complaint', async () => {
-      const complaint = makeComplaint({
-        status: ComplaintStatus.NEW,
-        assigned_to: null,
-      });
+      const complaint = makeComplaint({ status: ComplaintStatus.NEW, assigned_to: null });
 
       mockComplaintRepo.findOne.mockResolvedValue(complaint);
       mockComplaintRepo.save.mockResolvedValue({
@@ -376,13 +381,9 @@ describe('ComplaintService', () => {
 
     it('should throw BadRequestException for invalid status transition', async () => {
       mockComplaintRepo.findOne.mockResolvedValue(
-        makeComplaint({
-          status: ComplaintStatus.RESOLVED,
-          assigned_to: { id: 5 },
-        }),
+        makeComplaint({ status: ComplaintStatus.RESOLVED, assigned_to: { id: 5 } }),
       );
 
-      // RESOLVED → IN_PROGRESS is not allowed
       await expect(
         service.officerUpdate(1, { status: ComplaintStatus.IN_PROGRESS }, 5),
       ).rejects.toThrow(BadRequestException);
@@ -397,10 +398,7 @@ describe('ComplaintService', () => {
 
       mockComplaintRepo.findOne.mockResolvedValue(complaint);
       mockAppUserRepo.findOne.mockResolvedValue(newOfficer);
-      mockComplaintRepo.save.mockResolvedValue({
-        ...complaint,
-        assigned_to: newOfficer,
-      });
+      mockComplaintRepo.save.mockResolvedValue({ ...complaint, assigned_to: newOfficer });
 
       const result = await service.officerUpdate(1, { assigned_to_id: 7 }, 5);
 
@@ -411,7 +409,9 @@ describe('ComplaintService', () => {
       mockComplaintRepo.findOne.mockResolvedValue(
         makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: { id: 5 } }),
       );
-      mockAppUserRepo.findOne.mockResolvedValue(null);
+      mockAppUserRepo.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
 
       await expect(
         service.officerUpdate(1, { assigned_to_id: 99 }, 5),
@@ -456,10 +456,7 @@ describe('ComplaintService', () => {
       await service.findWithFilters({ page: 2, page_size: 10 });
 
       expect(mockComplaintRepo.findAndCount).toHaveBeenCalledWith(
-        expect.objectContaining({
-          skip: 10,  // (2-1) * 10
-          take: 10,
-        }),
+        expect.objectContaining({ skip: 10, take: 10 }),
       );
     });
 
@@ -478,18 +475,219 @@ describe('ComplaintService', () => {
     it('should apply date range filter', async () => {
       mockComplaintRepo.findAndCount.mockResolvedValue([[], 0]);
 
-      await service.findWithFilters({
-        start_date: '2026-01-01',
-        end_date: '2026-03-31',
-      });
+      await service.findWithFilters({ start_date: '2026-01-01', end_date: '2026-03-31' });
 
       expect(mockComplaintRepo.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({
-            created_at: expect.anything(), // Between returns a FindOperator
-          }),
+          where: expect.objectContaining({ created_at: expect.anything() }),
         }),
       );
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // Status Transitions — Allowed (from friend)
+  // ─────────────────────────────────────────────
+  describe('Status Transitions - Allowed', () => {
+    it('Test 1: NEW -> ASSIGNED (officer claims)', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.NEW, assigned_to: null, citizen: { id: 1 } }),
+      );
+
+      const result = await service.officerUpdate(
+        1, { status: ComplaintStatus.ASSIGNED } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.ASSIGNED);
+    });
+
+    it('Test 2: ASSIGNED -> IN_PROGRESS', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: { id: 1 } }),
+      );
+
+      const result = await service.officerUpdate(
+        1, { status: ComplaintStatus.IN_PROGRESS } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.IN_PROGRESS);
+    });
+
+    it('Test 3: IN_PROGRESS -> RESOLVED', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.IN_PROGRESS, assigned_to: { id: 1 } }),
+      );
+
+      const result = await service.officerUpdate(
+        1, { status: ComplaintStatus.RESOLVED } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.RESOLVED);
+    });
+
+    it('Test 4: IN_PROGRESS -> REJECTED', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.IN_PROGRESS, assigned_to: { id: 1 } }),
+      );
+
+      const result = await service.officerUpdate(
+        1, { status: ComplaintStatus.REJECTED } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.REJECTED);
+    });
+
+    it('Test 5: RESOLVED -> REOPENED (citizen)', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.RESOLVED, citizen: { id: 1 } }),
+      );
+
+      const result = await service.citizenUpdate(
+        1, { status: ComplaintStatus.REOPENED } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.REOPENED);
+    });
+
+    it('Test 6: REJECTED -> ESCALATED (citizen)', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.REJECTED, citizen: { id: 1 } }),
+      );
+
+      const result = await service.citizenUpdate(
+        1, { status: ComplaintStatus.ESCALATED } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.ESCALATED);
+    });
+
+    it('Test 7: REOPENED -> ASSIGNED', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.REOPENED, assigned_to: { id: 1 } }),
+      );
+
+      const result = await service.officerUpdate(
+        1, { status: ComplaintStatus.ASSIGNED } as any, 1,
+      );
+      expect(result.status).toBe(ComplaintStatus.ASSIGNED);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // Status Transitions — Not Allowed (from friend)
+  // ─────────────────────────────────────────────
+  describe('Status Transitions - Not Allowed', () => {
+    it('Test 8: ASSIGNED -> ASSIGNED not allowed', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: { id: 1 } }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.ASSIGNED } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('Test 9: NEW -> RESOLVED not allowed', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.NEW, assigned_to: { id: 1 } }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.RESOLVED } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('Test 10: ASSIGNED -> RESOLVED not allowed', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: { id: 1 } }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.RESOLVED } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('Test 11: RESOLVED -> ASSIGNED not allowed', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.RESOLVED, citizen: { id: 1 } }),
+      );
+
+      await expect(
+        service.citizenUpdate(1, { status: ComplaintStatus.ASSIGNED } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('Test 12: ESCALATED -> anything not allowed', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ESCALATED, assigned_to: { id: 1 } }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.IN_PROGRESS } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // Citizen Restrictions (from friend)
+  // ─────────────────────────────────────────────
+  describe('Citizen Restrictions', () => {
+    it('Test 13: Citizen cannot update own complaint to ASSIGNED', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, citizen: { id: 1 } }),
+      );
+
+      await expect(
+        service.citizenUpdate(1, { status: ComplaintStatus.ASSIGNED } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('Test 14: Citizen cannot update another citizen complaint', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.RESOLVED, citizen: { id: 99 } }),
+      );
+
+      await expect(
+        service.citizenUpdate(1, { status: ComplaintStatus.REOPENED } as any, 1),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.citizenUpdate(1, { status: ComplaintStatus.REOPENED } as any, 1),
+      ).rejects.toThrow('You can only update your own complaints');
+    });
+  });
+
+  // ─────────────────────────────────────────────
+  // Officer Restrictions (from friend)
+  // ─────────────────────────────────────────────
+  describe('Officer Restrictions', () => {
+    it('Test 15: Officer cannot update complaint assigned to someone else', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: { id: 99 } }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.IN_PROGRESS } as any, 1),
+      ).rejects.toThrow(ForbiddenException);
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.IN_PROGRESS } as any, 1),
+      ).rejects.toThrow('You can only update status of complaints assigned to you');
+    });
+
+    it('Test 16: Officer cannot claim already assigned complaint', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.NEW, assigned_to: { id: 99 } }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.ASSIGNED } as any, 1),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('Test 17: Officer cannot claim non-NEW complaint', async () => {
+      mockComplaintRepo.findOne.mockResolvedValue(
+        makeComplaint({ status: ComplaintStatus.ASSIGNED, assigned_to: null }),
+      );
+
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.ASSIGNED } as any, 1),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.officerUpdate(1, { status: ComplaintStatus.ASSIGNED } as any, 1),
+      ).rejects.toThrow('Only NEW complaints can be claimed');
     });
   });
 });
