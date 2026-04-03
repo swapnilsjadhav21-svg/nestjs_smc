@@ -53,6 +53,7 @@ export class ComplaintService {
     citizen_id?: number;
     complaint_type_id?: number;
     status?: string;
+    team_officer_id?: number;
     start_date?: string;
     end_date?: string;
     page?: number;
@@ -69,6 +70,24 @@ export class ComplaintService {
     if (filters.prabhag_id) where.prabhag = { id: filters.prabhag_id };
     if (filters.department_id) where.department = { id: filters.department_id };
     if (filters.assigned_to) where.assigned_to = { id: filters.assigned_to };
+    if (!filters.assigned_to && filters.team_officer_id) {
+      const officer = await this.appUserRepo.findOne({
+        where: { id: filters.team_officer_id, is_deleted: false },
+        relations: ['department'],
+      });
+
+      if (!officer) {
+        throw new NotFoundException(`Officer with id ${filters.team_officer_id} not found`);
+      }
+
+      if (!officer.department) {
+        throw new BadRequestException(
+          `Officer ${filters.team_officer_id} is not assigned to any department`,
+        );
+      }
+
+      (where as any).assigned_to = { department: { id: officer.department.id } };
+    }
     if (filters.citizen_id) where.citizen = { id: filters.citizen_id };
     if (filters.complaint_type_id) where.complaint_type = { id: filters.complaint_type_id };
 
@@ -242,6 +261,10 @@ export class ComplaintService {
     dto: CitizenUpdateComplaintDto,
     citizenId: number,
   ): Promise<Complaint> {
+    if (!dto || !dto.status) {
+      throw new BadRequestException('status is required for citizen update');
+    }
+
     const complaint = await this.findOne(complaintId);
 
     if (complaint.citizen?.id !== citizenId) {
@@ -268,6 +291,21 @@ export class ComplaintService {
     dto: OfficerUpdateComplaintDto,
     officerId: number,
   ): Promise<Complaint> {
+    if (!dto) {
+      throw new BadRequestException('Update payload is required');
+    }
+
+    const hasOfficerUpdateFields =
+      !!dto.status ||
+      !!dto.assigned_to_id ||
+      !!dto.department_id ||
+      !!dto.zone_id ||
+      !!dto.prabhag_id;
+
+    if (!hasOfficerUpdateFields) {
+      throw new BadRequestException('At least one update field is required');
+    }
+
     const complaint = await this.findOne(complaintId);
 
     if (dto.status) {

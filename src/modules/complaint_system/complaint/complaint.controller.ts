@@ -1,5 +1,5 @@
 // complaint.controller.ts
-import { BadRequestException, Body, Controller, Get, Param,
+import { BadRequestException, Body, Controller, ForbiddenException, Get, Param,
          ParseIntPipe, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -7,13 +7,9 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ComplaintService } from './complaint.service';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
-import {
-  CitizenUpdateComplaintDto,
-  OfficerUpdateComplaintDto,
-} from './dto/update-complaint-status.dto';
+import { CitizenUpdateComplaintDto, OfficerUpdateComplaintDto } from './dto/update-complaint-status.dto';
 import { Complaint } from './entities/complaint.entity';
 import { CitizenGuard } from 'src/auth/guards/citizen.guard';
-import { OfficerGuard } from 'src/auth/guards/officer.guard';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CurrentUser } from 'src/auth/decorators/user.decorator';
 import type { JwtPayload } from 'src/auth/strategies/jwt.strategy';
@@ -35,6 +31,7 @@ export class ComplaintController {
   @ApiQuery({ name: 'citizen_id', required: false, type: Number })
   @ApiQuery({ name: 'complaint_type_id', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, type: String })
+  @ApiQuery({ name: 'team', required: false, type: Boolean, description: 'When true, filter by current officer team/department' })
   @ApiQuery({ name: 'start_date', required: false, type: String, description: 'Format: YYYY-MM-DD' })
   @ApiQuery({ name: 'end_date', required: false, type: String, description: 'Format: YYYY-MM-DD' })
   @ApiQuery({ name: 'page', required: false, type: Number })
@@ -47,11 +44,14 @@ export class ComplaintController {
     @Query('citizen_id') citizen_id?: number,
     @Query('complaint_type_id') complaint_type_id?: number,
     @Query('status') status?: string,
+    @Query('team') team?: string,
     @Query('start_date') start_date?: string,
     @Query('end_date') end_date?: string,
     @Query('page') page?: number,
     @Query('page_size') page_size?: number,
+    @CurrentUser() user?: JwtPayload,
   ) {
+    const useTeamFilter = team === 'true' || team === '1';
     return this.complaintService.findWithFilters({
       zone_id: zone_id ? Number(zone_id) : undefined,
       prabhag_id: prabhag_id ? Number(prabhag_id) : undefined,
@@ -60,6 +60,7 @@ export class ComplaintController {
       citizen_id: citizen_id ? Number(citizen_id) : undefined,
       complaint_type_id: complaint_type_id ? Number(complaint_type_id) : undefined,
       status,
+      team_officer_id: useTeamFilter ? user?.sub : undefined,
       start_date,
       end_date,
       page: page ? Number(page) : 1,
@@ -138,47 +139,100 @@ export class ComplaintController {
     return this.complaintService.create(dto, user.sub, files);
   }
 
-  @Get('my')
-  @UseGuards(CitizenGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Citizen views their own complaints' })
-  findMyCitizenComplaints(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint[]> {
-    return this.complaintService.findMyCitizenComplaints(user.sub);
+  // @Get('my')
+  // @UseGuards(CitizenGuard)
+  // @ApiBearerAuth('JWT-auth')
+  // @ApiOperation({ summary: 'Citizen views their own complaints' })
+  // findMyCitizenComplaints(
+  //   @CurrentUser() user: JwtPayload,
+  // ): Promise<Complaint[]> {
+  //   return this.complaintService.findMyCitizenComplaints(user.sub);
+  // }
+
+  @Patch(':id')
+@UseGuards(JwtAuthGuard)
+@ApiBearerAuth('JWT-auth')
+@ApiOperation({ summary: 'Update complaint — citizen: reopen/escalate | officer: status/reassign/zone/dept' })
+@ApiBody({
+  schema: {
+    type: 'object',
+    properties: {
+      // Citizen fields
+      status: {
+        type: 'string',
+        enum: ['REOPENED', 'ESCALATED', 'ASSIGNED', 'IN_PROGRESS', 'RESOLVED', 'REJECTED'],
+        description: 'CITIZEN: REOPENED or ESCALATED only | OFFICER: any valid transition',
+      },
+      // Officer only fields
+      assigned_to_id: {
+        type: 'number',
+        description: 'OFFICER only — reassign to another officer',
+      },
+      department_id: {
+        type: 'number',
+        description: 'OFFICER only — update department',
+      },
+      zone_id: {
+        type: 'number',
+        description: 'OFFICER only — update zone',
+      },
+      prabhag_id: {
+        type: 'number',
+        description: 'OFFICER only — update prabhag',
+      },
+      remark: {
+        type: 'string',
+        description: 'OFFICER only — optional remark',
+      },
+    },
+  },
+})
+updateComplaint(
+  @Param('id', ParseIntPipe) id: number,
+  @Body() dto: CitizenUpdateComplaintDto | OfficerUpdateComplaintDto,
+  @CurrentUser() user: JwtPayload,
+): Promise<Complaint> {
+  if (!dto || typeof dto !== 'object' || Object.keys(dto).length === 0) {
+    throw new BadRequestException('Update payload is required');
   }
 
-  @Patch(':id/reopen')
-  @UseGuards(CitizenGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Citizen updates complaint — reopen or escalate only' })
-  citizenUpdate(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: CitizenUpdateComplaintDto,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint> {
-    return this.complaintService.citizenUpdate(id, dto, user.sub);
+  if (user.type === 'CITIZEN') {
+    if (!(dto as CitizenUpdateComplaintDto).status) {
+      throw new BadRequestException('status is required for citizen update');
+    }
+    return this.complaintService.citizenUpdate(
+      id, dto as CitizenUpdateComplaintDto, user.sub
+    );
   }
 
-  @Get('assigned')
-  @UseGuards(OfficerGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Officer views complaints assigned to them' })
-  findAssignedComplaints(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint[]> {
-    return this.complaintService.findAssignedComplaints(user.sub);
+  if (user.type === 'OFFICER') {
+    return this.complaintService.officerUpdate(
+      id, dto as OfficerUpdateComplaintDto, user.sub
+    );
   }
 
-  @Get('team')
-  @UseGuards(OfficerGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Officer views their team complaints' })
-  findTeamComplaints(
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint[]> {
-    return this.complaintService.findTeamComplaints(user.sub);
-  }
+  throw new ForbiddenException('Unsupported user type for complaint update');
+}
+
+  // @Get('assigned')
+  // @UseGuards(OfficerGuard)
+  // @ApiBearerAuth('JWT-auth')
+  // @ApiOperation({ summary: 'Officer views complaints assigned to them' })
+  // findAssignedComplaints(
+  //   @CurrentUser() user: JwtPayload,
+  // ): Promise<Complaint[]> {
+  //   return this.complaintService.findAssignedComplaints(user.sub);
+  // }
+
+  // @Get('team')
+  // @UseGuards(OfficerGuard)
+  // @ApiBearerAuth('JWT-auth')
+  // @ApiOperation({ summary: 'Officer views their team complaints' })
+  // findTeamComplaints(
+  //   @CurrentUser() user: JwtPayload,
+  // ): Promise<Complaint[]> {
+  //   return this.complaintService.findTeamComplaints(user.sub);
+  // }
 
   // ⚠️ :id routes MUST come after all named routes (my, assigned, team)
   // otherwise NestJS matches "my" as an :id param
@@ -190,15 +244,4 @@ export class ComplaintController {
     return this.complaintService.findOne(id);
   }
 
-  @Patch(':id/officer')
-  @UseGuards(OfficerGuard)
-  @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Officer updates complaint — status, assign, zone, dept' })
-  officerUpdate(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: OfficerUpdateComplaintDto,
-    @CurrentUser() user: JwtPayload,
-  ): Promise<Complaint> {
-    return this.complaintService.officerUpdate(id, dto, user.sub);
-  }
 }
