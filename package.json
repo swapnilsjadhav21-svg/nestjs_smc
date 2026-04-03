@@ -85,7 +85,6 @@
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
-     "moduleNameMapper": {
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
     },
